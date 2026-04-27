@@ -52,8 +52,10 @@
 .dt__th--owner { width: 160px; }
 .dt__th--date { width: 110px; }
 .dt__th--status { width: 200px; }
-.dt__th--days { width: 80px; text-align: right; }
+.dt__th--progress { width: 120px; cursor: default; }
+.dt__th--days { width: 112px; text-align: right; }
 .dt__th--action { width: 100px; cursor: default; }
+.dt__th--note { width: 40px; cursor: default; text-align: center; }
 
 .dt__th--emphasis {
   color: var(--color-text-primary);
@@ -143,6 +145,10 @@
   color: var(--color-danger);
 }
 
+.dt__td--date.dt__td--past {
+  font-weight: var(--fw-semibold);
+}
+
 .dt__td--emphasis {
   font-weight: var(--fw-semibold);
   color: var(--color-text-primary);
@@ -189,6 +195,17 @@
 .dt__owner-missing {
   color: var(--color-text-muted);
   font-style: italic;
+}
+
+/* Progress column */
+.dt__td--progress {
+  padding: 8px 14px;
+}
+
+/* Lead note column */
+.dt__td--note {
+  text-align: center;
+  padding: 8px 6px;
 }
 
 /* Action column */
@@ -248,7 +265,8 @@
 }
 
 @media (max-width: 1023px) {
-  .dt__th--days, td.dt__td--days {
+  .dt__th--days, td.dt__td--days,
+  .dt__th--progress, td.dt__td--progress {
     display: none;
   }
 }

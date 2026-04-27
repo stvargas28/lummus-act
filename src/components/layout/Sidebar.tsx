@@ -20,7 +20,8 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Deliverables',
     to: '/deliverables',
     icon: '≡',
-    roles: ['LEAD', 'PM'],
+    // Engineers see this tab as read-only (UI §2.1, §10.1, MVP §8.4).
+    roles: ['LEAD', 'PM', 'ENGINEER'],
     badgeKey: 'deliverables',
     badgeTone: 'danger',
   },
@@ -43,7 +44,10 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const ACCOUNT_ITEMS: NavItem[] = [
-  { label: 'Settings', to: '/settings', icon: '⚙', roles: ['LEAD'] },
+  // PM gets Settings access too (UI §10.1 v2.1) — Settings is mostly empty for
+  // them in MVP, but the shell is visible. Lead-only sections inside Settings
+  // remain restricted at the page level.
+  { label: 'Settings', to: '/settings', icon: '⚙', roles: ['LEAD', 'PM'] },
 ];
 
 // Synthetic counts for now — wired to real counts in a later phase.

@@ -23,7 +23,7 @@ function HomeRedirect() {
 
 /**
  * Route-level UX guard. Real authorization lives in the backend / SSO mapping
- * (see ACT MVP Spec v4 §8). This guard exists to keep the URL bar honest with
+ * (see ACT MVP Spec v5 §8). This guard exists to keep the URL bar honest with
  * the active membership — it bounces a user away from a page their current
  * role cannot meaningfully use, rather than rendering a broken view.
  */
@@ -57,7 +57,7 @@ export default function App() {
                   <Route
                     path="/deliverables"
                     element={
-                      <RoleGuard allow={['LEAD', 'PM']}>
+                      <RoleGuard allow={['LEAD', 'PM', 'ENGINEER']}>
                         <PlaceholderPage title="Deliverables" />
                       </RoleGuard>
                     }
@@ -89,7 +89,7 @@ export default function App() {
                   <Route
                     path="/settings"
                     element={
-                      <RoleGuard allow={['LEAD']}>
+                      <RoleGuard allow={['LEAD', 'PM']}>
                         <PlaceholderPage title="Settings" />
                       </RoleGuard>
                     }

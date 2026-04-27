@@ -27,3 +27,5 @@ export async function getNeedsAttention(_id: string): Promise<AttentionItem[]> {
 export async function getSyncStatus(): Promise<SyncStatus> { throw new Error(NOT_WIRED); }
 export async function getPendingReviewsForUser(_id: string, _userId: string): Promise<PendingReview[]> { throw new Error(NOT_WIRED); }
 export async function nudge(_id: string, _recipientId: string): Promise<{ ok: true; sent_at: string }> { throw new Error(NOT_WIRED); }
+export async function updateLeadNote(_id: string, _note: string | null): Promise<Deliverable> { throw new Error(NOT_WIRED); }
+export async function updateEngineerProgress(_id: string, _pct: number | null): Promise<Deliverable> { throw new Error(NOT_WIRED); }

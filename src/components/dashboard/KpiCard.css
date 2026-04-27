@@ -94,6 +94,12 @@
   font-size: 9px;
 }
 
+.kpi-card__delta-window {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: var(--fw-medium);
+}
+
 .kpi-card__delta--good {
   color: var(--color-accent-green);
   background-color: var(--color-accent-green-soft);

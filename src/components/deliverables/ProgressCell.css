@@ -1,0 +1,79 @@
+.prog-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.prog-bar__track {
+  flex: 1 1 auto;
+  height: 4px;
+  background-color: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 32px;
+}
+
+.prog-bar__fill {
+  height: 100%;
+  background-color: var(--color-accent-teal);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.prog-bar__label {
+  font-size: 10.5px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.prog-bar__none {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+/* Segmented control (editable) */
+.prog-seg {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.prog-seg__btn {
+  flex: 1 1 auto;
+  height: 22px;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  border-right: 1px solid var(--color-border);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.1s, color 0.1s;
+  line-height: 1;
+}
+
+.prog-seg__btn:last-child {
+  border-right: none;
+}
+
+.prog-seg__btn:hover {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+.prog-seg__btn--active {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+.prog-seg__btn--active:hover {
+  background-color: var(--color-primary);
+  color: #fff;
+}

@@ -21,7 +21,7 @@ function deltaSemanticForDirection(card: KpiCardData): 'good' | 'bad' | 'neutral
 interface KpiCardProps {
   card: KpiCardData;
   loading?: boolean;
-  /** Optional descriptor under the value, e.g. "vs. last week" or "≤ 5 days remaining". */
+  /** Optional descriptor under the value, e.g. "of total" or "≤ 5 days remaining". */
   descriptor?: string;
 }
 
@@ -45,17 +45,23 @@ export function KpiCard({ card, loading, descriptor }: KpiCardProps) {
 
       <div className="kpi-card__foot">
         <span className="kpi-card__descriptor">{descriptor ?? defaultDescriptor(card)}</span>
-        {!loading && card.delta_pct !== null && !card.key.startsWith('total') && (
+        {!loading && card.delta_count !== null && !card.key.startsWith('total') && (
           <span className={`kpi-card__delta kpi-card__delta--${tone}`}>
             <span className="kpi-card__delta-arrow" aria-hidden="true">{ARROW[card.delta_direction]}</span>
-            <span className="kpi-card__delta-pct mono">
-              {card.delta_direction === 'flat' ? '0%' : `${Math.abs(card.delta_pct)}%`}
+            <span className="kpi-card__delta-count mono">
+              {formatDeltaCount(card.delta_count)}
             </span>
+            <span className="kpi-card__delta-window">today</span>
           </span>
         )}
       </div>
     </article>
   );
+}
+
+function formatDeltaCount(n: number): string {
+  if (n > 0) return `+${n}`;
+  return `${n}`;
 }
 
 function formatValue(n: number): string {

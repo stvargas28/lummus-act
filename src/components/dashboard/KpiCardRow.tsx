@@ -39,7 +39,7 @@ function placeholder(key: string) {
     key,
     label: ' ',
     value: null,
-    delta_pct: null,
+    delta_count: null,
     delta_direction: 'flat' as const,
     delta_semantic: 'neutral' as const,
     color_token: '--color-border',

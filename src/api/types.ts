@@ -1,5 +1,14 @@
 export type Role = 'LEAD' | 'PM' | 'ENGINEER';
 
+/**
+ * MVP phase enum (ACT MVP Spec v5 §4).
+ *
+ * NOTE: Post-issue phases (`CLIENT_COMMENTS_RECEIVED`, `REVISING_PER_CLIENT`,
+ * `CLIENT_RESPONSE_SUBMITTED`, `APPROVED_BY_CLIENT` — see MVP §18) are
+ * deferred. Do not extend this enum yet, but do not assume `ISSUED` is the
+ * permanent terminal state for row styling, table architecture, or color
+ * tokens (UI Spec §13.6).
+ */
 export type ActPhase =
   | 'NOT_STARTED'
   | 'DRAFT'
@@ -7,6 +16,12 @@ export type ActPhase =
   | 'REVISING'
   | 'READY_FOR_ISSUE'
   | 'ISSUED';
+
+/**
+ * Intervention level (MVP §9.7). Computed per flagged item; drives card
+ * accent color, ⚑ icon, and PM Needs Attention panel ordering.
+ */
+export type InterventionLevel = 'INFO' | 'LEAD_ACTION' | 'PM_AWARENESS' | 'PM_INTERVENTION';
 
 export type ReviewStatus = 'OPEN' | 'CLOSED';
 
@@ -93,6 +108,21 @@ export interface Deliverable {
   review: DeliverableReview | null;
   days_remaining_internal: number | null;
   days_remaining_client: number | null;
+
+  /**
+   * Self-reported execution progress, 0–100, stepped 0/25/50/75/100 in the
+   * MVP control. Editable only by the assigned engineer from My Work.
+   * Visible to all roles. Does NOT drive ACT phase, overdue flag, or alert
+   * triggers — context only (MVP §7, UI §2.1).
+   */
+  engineer_progress_percent: number | null;
+
+  /**
+   * Lead-only informal scratch note, single current value, overwritten in
+   * place. No formal audit, no alert trigger (MVP §7, UI §4.5). Engineers
+   * never see this; PM visibility TBD.
+   */
+  lead_private_note: string | null;
 }
 
 export interface AttentionItem {
@@ -107,13 +137,19 @@ export interface AttentionItem {
   recipient_user_id: string | null;
   already_alerted_today: boolean;
   last_alert_at: string | null;
+  /**
+   * Computed escalation level (MVP §9.7). Drives card accent color, the ⚑
+   * flag in PM_INTERVENTION, and panel ordering — PM_INTERVENTION sorts to
+   * the top regardless of category.
+   */
+  intervention_level: InterventionLevel;
 }
 
 export interface KpiCardData {
   key: string;
   label: string;
   value: number | null;
-  delta_pct: number | null;
+  delta_count: number | null;
   delta_direction: 'up' | 'down' | 'flat';
   delta_semantic: 'positive' | 'negative' | 'neutral';
   color_token: string;

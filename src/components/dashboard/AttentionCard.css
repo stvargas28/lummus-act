@@ -30,6 +30,18 @@
   min-width: 0;
 }
 
+.attention-card__flag {
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--color-danger);
+  align-self: center;
+}
+
+.attention-card--pm-intervention {
+  background-color: rgba(204, 51, 0, 0.025);
+}
+
 .attention-card__ref {
   font-family: var(--font-mono);
   font-size: 11.5px;

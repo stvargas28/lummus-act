@@ -11,6 +11,14 @@ import type {
   SyncStatus,
 } from '../types';
 
+export async function updateLeadNote(deliverableId: string, note: string | null): Promise<Deliverable> {
+  return seed.updateLeadNote(deliverableId, note);
+}
+
+export async function updateEngineerProgress(deliverableId: string, percent: number | null): Promise<Deliverable> {
+  return seed.updateEngineerProgress(deliverableId, percent);
+}
+
 export async function listProjects(): Promise<Project[]> {
   return seed.listProjects();
 }

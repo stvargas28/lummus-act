@@ -6,6 +6,7 @@ import type {
   Deliverable,
   DeliverableReview,
   FunnelPhase,
+  InterventionLevel,
   KpiCardData,
   PendingReview,
   Persona,
@@ -298,6 +299,84 @@ function synthesizeReview(
   };
 }
 
+// ---------- engineer progress + lead note synthesis ----------
+
+/**
+ * Self-reported engineer progress, stepped 0/25/50/75/100 (UI §2.1).
+ *
+ * Rules:
+ *  - No owner → null (nothing to attribute progress to).
+ *  - NOT_STARTED → 0 (engineer hasn't picked it up).
+ *  - ISSUED → 100 (work delivered).
+ *  - Other phases → deterministic 25/50/75 based on doc reference hash so the
+ *    distribution is realistic and stable across reloads.
+ *
+ * Note: this is context only — it does not affect overdue, alerts, or phase
+ * (MVP §7).
+ */
+function synthesizeEngineerProgress(docRef: string, phase: ActPhase, hasOwner: boolean): number | null {
+  if (!hasOwner) return null;
+  if (phase === 'NOT_STARTED') return 0;
+  if (phase === 'ISSUED') return 100;
+  const r = hash(docRef + 'progress') % 3;
+  return [25, 50, 75][r];
+}
+
+const SYNTHETIC_LEAD_NOTES = [
+  'Waiting on Will to confirm coil dimensions before reissuing.',
+  'Owner OOO this week — circle back Monday.',
+  'PM agreed to push client due by 3 days; update in Excel re-upload.',
+  'Reviewer keeps marking minor comments as substantive — flag in next 1:1.',
+  'Earlier rev had open ProcessSafety comment; verify carried forward.',
+];
+
+/**
+ * Lead-only scratch note (MVP §7 / UI §4.5). About 1 in 8 deliverables
+ * carries a synthetic note so the popover/icon UI exercises both states.
+ * Empty (null) is the common case.
+ */
+function synthesizeLeadNote(docRef: string): string | null {
+  const slot = hash(docRef + 'note') % 8;
+  if (slot >= SYNTHETIC_LEAD_NOTES.length) return null;
+  return SYNTHETIC_LEAD_NOTES[slot];
+}
+
+// ---------- intervention level (MVP §9.7) ----------
+
+/**
+ * Computes the intervention level for a flagged item per MVP §9.7
+ * thresholds. Higher levels override lower.
+ */
+function computeInterventionLevel(d: Deliverable): InterventionLevel {
+  const review = d.review;
+  const idle = review?.idle_business_days ?? 0;
+  const pending = review?.pending_active_count ?? 0;
+  const open = review?.status === 'OPEN';
+  const clientImminentInReview =
+    d.act_phase === 'UNDER_REVIEW' &&
+    d.days_remaining_client !== null &&
+    d.days_remaining_client >= 0 &&
+    d.days_remaining_client <= 3;
+
+  // PM_INTERVENTION
+  if ((open && idle >= 4) || clientImminentInReview) return 'PM_INTERVENTION';
+
+  // Past client due is also an intervention-grade situation.
+  if (d.act_phase !== 'ISSUED' && d.days_remaining_client !== null && d.days_remaining_client < 0) {
+    return 'PM_INTERVENTION';
+  }
+
+  // PM_AWARENESS: review idle ≥ 3, OR (≥ 2 idle + already nudged today + no action)
+  // We don't track per-deliverable nudge state in mock; the second clause is approximated
+  // by deliverables synthesized as already_alerted_today on the attention card.
+  if (open && idle >= 3) return 'PM_AWARENESS';
+
+  // LEAD_ACTION: review idle ≥ 2 with at least one pending reviewer
+  if (open && idle >= 2 && pending >= 1) return 'LEAD_ACTION';
+
+  return 'INFO';
+}
+
 // ---------- bottleneck selection ----------
 
 function selectBottleneckRefs(projectId: string, candidates: RawMatch[]): Set<string> {
@@ -360,6 +439,8 @@ function buildProject(projectId: string): ProjectData {
       review,
       days_remaining_internal: internalDays,
       days_remaining_client: clientDays,
+      engineer_progress_percent: synthesizeEngineerProgress(m.document_reference, phase, owner !== null),
+      lead_private_note: synthesizeLeadNote(m.document_reference),
     };
   });
 
@@ -370,6 +451,24 @@ function buildProject(projectId: string): ProjectData {
   };
   _cache[projectId] = data;
   return data;
+}
+
+// ---------- mutations (in-memory; overwrite cached deliverable fields) ----------
+
+export function updateLeadNote(deliverableId: string, note: string | null): Deliverable {
+  for (const pid of Object.keys(_cache)) {
+    const d = _cache[pid].deliverables.find((x) => x.id === deliverableId);
+    if (d) { d.lead_private_note = note; return d; }
+  }
+  throw new Error(`Deliverable ${deliverableId} not found`);
+}
+
+export function updateEngineerProgress(deliverableId: string, percent: number | null): Deliverable {
+  for (const pid of Object.keys(_cache)) {
+    const d = _cache[pid].deliverables.find((x) => x.id === deliverableId);
+    if (d) { d.engineer_progress_percent = percent; return d; }
+  }
+  throw new Error(`Deliverable ${deliverableId} not found`);
 }
 
 // ---------- public surface ----------
@@ -482,8 +581,8 @@ export function getKpiSummary(projectId: string, role: 'LEAD' | 'PM'): KpiCardDa
     return [
       kpi('total', 'Total Deliverables', total, 0, 'flat', 'neutral', '--color-primary'),
       kpi('on_track', 'On Track', onTrack, 4, 'up', 'positive', '--color-accent-green'),
-      kpi('at_risk', 'At Risk', atRisk, 12, 'up', 'negative', '--color-warn-amber'),
-      kpi('overdue', 'Overdue', overdue, 8, 'up', 'negative', '--color-danger'),
+      kpi('at_risk', 'At Risk', atRisk, Math.min(1, atRisk), atRisk > 0 ? 'up' : 'flat', 'negative', '--color-warn-amber'),
+      kpi('overdue', 'Overdue', overdue, Math.min(2, overdue), overdue > 0 ? 'up' : 'flat', 'negative', '--color-danger'),
     ];
   }
 
@@ -499,8 +598,8 @@ export function getKpiSummary(projectId: string, role: 'LEAD' | 'PM'): KpiCardDa
   return [
     kpi('total', 'Total Deliverables', total, 0, 'flat', 'neutral', '--color-primary'),
     kpi('on_track_client', 'On Track vs Client Due', onTrackClient, 3, 'up', 'positive', '--color-accent-green'),
-    kpi('at_risk_client', 'At Risk of Client Due', atRiskClient, 9, 'up', 'negative', '--color-warn-amber'),
-    kpi('overdue_client', 'Overdue vs Client Due', overdueClient, 5, 'up', 'negative', '--color-danger'),
+    kpi('at_risk_client', 'At Risk of Client Due', atRiskClient, atRiskClient > 0 ? 1 : -2, atRiskClient > 0 ? 'up' : 'down', 'negative', '--color-warn-amber'),
+    kpi('overdue_client', 'Overdue vs Client Due', overdueClient, Math.min(2, overdueClient), overdueClient > 0 ? 'up' : 'flat', 'negative', '--color-danger'),
   ];
 }
 
@@ -517,7 +616,7 @@ function kpi(
     key,
     label,
     value,
-    delta_pct: delta,
+    delta_count: delta,
     delta_direction: dir,
     delta_semantic: semantic,
     color_token: color,
@@ -591,6 +690,7 @@ export function getNeedsAttention(projectId: string): AttentionItem[] {
         recipient_user_id: pending?.user_id ?? null,
         already_alerted_today: rand01(d.id + 'alert') < 0.4,
         last_alert_at: rand01(d.id + 'alert') < 0.4 ? new Date(NOW.getTime() - 1000 * 60 * 60 * 3).toISOString() : null,
+        intervention_level: computeInterventionLevel(d),
       });
       continue;
     }
@@ -612,21 +712,35 @@ export function getNeedsAttention(projectId: string): AttentionItem[] {
         recipient_user_id: null,
         already_alerted_today: false,
         last_alert_at: null,
+        intervention_level: computeInterventionLevel(d),
       });
     }
   }
 
-  // Sort: client-risk first, then severity, then time
-  const order: Record<AttentionItem['reason_kind'], number> = {
+  // Sort: intervention_level descending (PM_INTERVENTION on top regardless of
+  // category — UI §5.2 + MVP §9.7), then within each level by reason kind
+  // severity. The Needs Attention panel additionally separates client-risk vs
+  // internal in PM view, but base ordering is identical for both roles.
+  const levelRank: Record<InterventionLevel, number> = {
+    PM_INTERVENTION: 0,
+    PM_AWARENESS: 1,
+    LEAD_ACTION: 2,
+    INFO: 3,
+  };
+  const reasonRank: Record<AttentionItem['reason_kind'], number> = {
     PAST_CLIENT_DUE: 0,
-    PAST_INTERNAL_DUE: 1,
-    CLIENT_DUE_IMMINENT: 2,
-    SINGLE_REVIEWER_STALL: 3,
+    CLIENT_DUE_IMMINENT: 1,
+    SINGLE_REVIEWER_STALL: 2,
+    PAST_INTERNAL_DUE: 3,
     CLIENT_DUE_NO_REVIEW: 4,
     MULTI_REVIEWER_STALL: 5,
     DRAFT_IDLE_NEAR_DUE: 6,
   };
-  items.sort((a, b) => order[a.reason_kind] - order[b.reason_kind]);
+  items.sort((a, b) => {
+    const lvl = levelRank[a.intervention_level] - levelRank[b.intervention_level];
+    if (lvl !== 0) return lvl;
+    return reasonRank[a.reason_kind] - reasonRank[b.reason_kind];
+  });
   return items;
 }
 
@@ -650,6 +764,7 @@ function buildItem(
     recipient_user_id: d.owner_user_id,
     already_alerted_today: rand01(d.id + 'alert') < 0.3,
     last_alert_at: rand01(d.id + 'alert') < 0.3 ? new Date(NOW.getTime() - 1000 * 60 * 60 * 5).toISOString() : null,
+    intervention_level: computeInterventionLevel(d),
   };
 }
 

@@ -23,7 +23,3 @@ export function StatusChip({ phase }: { phase: ActPhase }) {
 export function LateChip() {
   return <span className="chip chip--late">LATE</span>;
 }
-
-export function UnmatchedChip() {
-  return <span className="chip chip--unmatched">⚠ Unmatched</span>;
-}
