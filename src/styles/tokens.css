@@ -1,0 +1,149 @@
+/* Brand tokens — values from ACT_UI_Spec_v1.md (§6.3 phase colors, §12 dark/light).
+   Components must read from these variables; never hardcode hex inside CSS. */
+
+:root,
+[data-theme='light'] {
+  /* Surface */
+  --color-bg-page: #f0f6f8;
+  --color-bg-subtle: #f6fafb;
+  --color-bg-surface: #ffffff;
+  --color-bg-dark: #053a49;
+  --color-bg-dark-hover: #0a4a5a;
+  --color-bg-dark-subtle: #0d3140;
+  --color-border: #dde6e9;
+  --color-border-strong: #9bb4b9;
+  --color-border-dark: rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --color-text-primary: #053a49;
+  --color-text-secondary: #688e96;
+  --color-text-muted: #8aa2a8;
+  --color-text-on-dark: #ffffff;
+  --color-text-on-dark-muted: rgba(255, 255, 255, 0.78);
+  --color-text-on-dark-faint: rgba(255, 255, 255, 0.45);
+
+  /* Brand / accents */
+  --color-primary: #004f99;
+  --color-primary-hover: #003b73;
+  --color-accent-teal: #2ba5a9;
+  --color-accent-teal-soft: rgba(43, 165, 169, 0.16);
+  --color-accent-lime: #d0e329;
+  --color-accent-lime-soft: rgba(208, 227, 41, 0.18);
+  --color-accent-seafoam: #67d1ca;
+  --color-accent-seafoam-soft: rgba(103, 209, 202, 0.18);
+  --color-accent-green: #00b349;
+  --color-accent-green-soft: rgba(0, 179, 73, 0.12);
+
+  /* Phase-specific */
+  --color-phase-not-started: #9bb4b9;
+  --color-phase-draft: #b7c9cd;
+
+  /* States */
+  --color-danger: #cc3300;
+  --color-danger-hover: #e03d0d;
+  --color-danger-soft: rgba(204, 51, 0, 0.10);
+  --color-warn-amber: #e08a00;
+  --color-warn-amber-soft: rgba(224, 138, 0, 0.10);
+  --color-warning: #e08a00;
+  --color-warning-soft: rgba(224, 138, 0, 0.10);
+
+  /* Row / hover */
+  --color-row-hover: #f6fafb;
+  --color-row-hover-strong: #eaf2f5;
+
+  /* Shadow */
+  --shadow-card: 0 1px 2px rgba(5, 58, 73, 0.06), 0 1px 1px rgba(5, 58, 73, 0.04);
+  --shadow-card-hover: 0 2px 6px rgba(5, 58, 73, 0.08), 0 1px 2px rgba(5, 58, 73, 0.04);
+
+  /* Radius */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+}
+
+[data-theme='dark'] {
+  --color-bg-page: #0a2a35;
+  --color-bg-subtle: #0d3140;
+  --color-bg-surface: #0f3545;
+  --color-bg-dark: #053a49;
+  --color-bg-dark-hover: #0a4a5a;
+  --color-bg-dark-subtle: #0d3140;
+  --color-border: #1b4555;
+  --color-border-strong: #2a5b6c;
+
+  --color-text-primary: #e9f1f3;
+  --color-text-secondary: #8fb0b6;
+  --color-text-muted: #6f8a91;
+
+  /* In dark mode, primary becomes seafoam so links/refs read on dark surfaces */
+  --color-primary: #67d1ca;
+  --color-primary-hover: #9cd6c6;
+  --color-accent-teal: #2ba5a9;
+  --color-accent-teal-soft: rgba(43, 165, 169, 0.18);
+  --color-accent-lime: #d0e329;
+  --color-accent-lime-soft: rgba(208, 227, 41, 0.16);
+  --color-accent-seafoam: #9cd6c6;
+  --color-accent-seafoam-soft: rgba(156, 214, 198, 0.18);
+  --color-accent-green: #00b349;
+  --color-accent-green-soft: rgba(0, 179, 73, 0.14);
+
+  --color-phase-not-started: #2a5b6c;
+  --color-phase-draft: #6f8a91;
+
+  --color-danger: #cc3300;
+  --color-danger-hover: #e03d0d;
+  --color-danger-soft: rgba(204, 51, 0, 0.18);
+  --color-warn-amber: #e08a00;
+  --color-warn-amber-soft: rgba(224, 138, 0, 0.14);
+  --color-warning: #e0a040;
+  --color-warning-soft: rgba(224, 160, 64, 0.14);
+
+  --color-row-hover: #133e50;
+  --color-row-hover-strong: #1a4a5d;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Typography */
+:root {
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-base: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 28px;
+  --fs-page: 30px;
+  --fs-kpi: 44px;
+
+  --lh-tight: 1.05;
+  --lh-snug: 1.2;
+  --lh-normal: 1.4;
+  --lh-relaxed: 1.6;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --letter-tight: -0.01em;
+  --letter-wide: 0.04em;
+  --letter-wider: 0.08em;
+  --letter-widest: 0.12em;
+}

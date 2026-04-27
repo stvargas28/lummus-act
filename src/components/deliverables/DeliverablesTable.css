@@ -1,0 +1,262 @@
+.dt-section {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.dt__error {
+  padding: var(--space-4);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.dt-wrapper {
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow-x: auto;
+}
+
+.dt {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-md);
+}
+
+/* Header */
+.dt thead th {
+  position: sticky;
+  top: 0;
+  background-color: var(--color-bg-subtle);
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  padding: 9px 14px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dt__th--ref { width: 160px; }
+.dt__th--owner { width: 160px; }
+.dt__th--date { width: 110px; }
+.dt__th--status { width: 200px; }
+.dt__th--days { width: 80px; text-align: right; }
+.dt__th--action { width: 100px; cursor: default; }
+
+.dt__th--emphasis {
+  color: var(--color-text-primary);
+  font-weight: var(--fw-bold);
+}
+
+.dt__sort {
+  font-weight: var(--fw-semibold);
+  color: var(--color-primary);
+}
+
+/* Rows */
+.dt__row td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 10px 14px;
+  vertical-align: middle;
+}
+
+.dt__row:hover td {
+  background-color: var(--color-row-hover);
+}
+
+.dt__row--overdue td {
+  position: relative;
+}
+.dt__row--overdue td:first-child {
+  box-shadow: inset 3px 0 0 var(--color-danger);
+}
+
+.dt__row--loading td {
+  padding: 10px 12px;
+}
+
+.dt__skeleton {
+  height: 24px;
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-subtle) 0%,
+    var(--color-border) 50%,
+    var(--color-bg-subtle) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.dt__empty {
+  padding: var(--space-6) !important;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--fs-md);
+}
+
+/* Cells */
+.dt__td--ref {
+  font-weight: var(--fw-semibold);
+}
+
+.dt__ref {
+  color: var(--color-primary);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.dt__ref:hover {
+  text-decoration: underline;
+}
+
+.dt__td--title {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+}
+
+.dt__td--date {
+  white-space: nowrap;
+}
+
+.dt__td--past {
+  color: var(--color-danger);
+}
+
+.dt__td--emphasis {
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+}
+
+.dt__td--days {
+  text-align: right;
+}
+
+.dt__chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Owner cell */
+.dt__owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dt__owner-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  flex-shrink: 0;
+}
+
+.dt__owner-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dt__owner-missing {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Action column */
+.dt__td--action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dt__td--action > * {
+  display: inline-flex;
+  align-items: center;
+}
+
+.dt__view-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong);
+  background-color: var(--color-bg-surface);
+  color: var(--color-primary);
+  font-size: 11.5px;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+  margin-right: var(--space-2);
+}
+
+.dt__view-btn:hover {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  text-decoration: none;
+}
+
+.dt__menu {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dt__menu:hover {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+}
+
+/* Responsive: hide discipline (we don't have a column for it but spec says hide it 768-1199), and hide days at narrower widths */
+@media (max-width: 1199px) {
+  .dt__th--owner, .dt__td--owner { display: table-cell; }
+}
+
+@media (max-width: 1023px) {
+  .dt__th--days, td.dt__td--days {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .dt__th--owner, .dt__td--owner,
+  .dt__th--date, .dt__td--date {
+    display: none;
+  }
+  .dt__th--ref { width: auto; }
+}

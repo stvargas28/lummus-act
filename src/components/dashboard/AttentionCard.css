@@ -1,0 +1,77 @@
+.attention-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--attn-accent, var(--color-accent-teal));
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  transition: background-color 0.12s ease;
+  cursor: pointer;
+}
+
+.attention-card:hover {
+  background-color: var(--color-row-hover);
+}
+
+.attention-card__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attention-card__row1 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.attention-card__ref {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-primary);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.attention-card__title {
+  font-size: 13px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.attention-card__reason {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.attention-card__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.attention-card__time {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--attn-accent, var(--color-accent-teal));
+  white-space: nowrap;
+  line-height: 1;
+}

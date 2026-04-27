@@ -1,0 +1,119 @@
+.kpi-card {
+  position: relative;
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: 116px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: box-shadow 100ms ease, border-color 100ms ease;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--kpi-accent, var(--color-accent-teal));
+}
+
+.kpi-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.kpi-card__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kpi-card__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background-color: var(--kpi-accent);
+}
+
+.kpi-card__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--letter-widest);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.kpi-card__value {
+  font-size: 34px;
+  font-weight: var(--fw-semibold);
+  line-height: 1.1;
+  color: var(--color-text-primary);
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.02em;
+  margin: 6px 0 4px;
+}
+
+.kpi-card__placeholder {
+  color: var(--color-text-muted);
+  font-weight: var(--fw-regular);
+}
+
+.kpi-card__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-top: auto;
+}
+
+.kpi-card__descriptor {
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+}
+
+.kpi-card__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  font-feature-settings: 'tnum' 1;
+}
+
+.kpi-card__delta-arrow {
+  font-size: 9px;
+}
+
+.kpi-card__delta--good {
+  color: var(--color-accent-green);
+  background-color: var(--color-accent-green-soft);
+}
+
+.kpi-card__delta--bad {
+  color: var(--color-danger);
+  background-color: var(--color-danger-soft);
+}
+
+.kpi-card__delta--neutral {
+  color: var(--color-text-muted);
+  background-color: var(--color-bg-subtle);
+}
+
+@media (max-width: 1199px) {
+  .kpi-card { padding: 13px 14px 12px; }
+  .kpi-card__value { font-size: 28px; }
+}
+
+@media (max-width: 479px) {
+  .kpi-card__value { font-size: 26px; }
+}
