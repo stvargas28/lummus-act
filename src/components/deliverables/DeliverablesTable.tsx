@@ -23,6 +23,10 @@ interface DeliverablesTableProps {
   phaseFilter?: ActPhase | null;
   /** When set, limits rows to deliverables owned by this user (Engineer "My Work"). */
   ownerUserId?: string | null;
+  /** Optional phase scope for sectioned tables such as Engineer active vs waiting work. */
+  phaseScope?: readonly ActPhase[] | null;
+  /** Hide the owner dropdown when ownership is already implied by the page. */
+  showOwnerFilter?: boolean;
   /** Lead view emphasizes Internal Due column; PM view emphasizes Client Due. */
   emphasis?: 'internal' | 'client';
   /** Which due date the Days column is measured against. Defaults to emphasis. */
@@ -41,6 +45,8 @@ export function DeliverablesTable({
   role,
   phaseFilter = null,
   ownerUserId = null,
+  phaseScope = null,
+  showOwnerFilter = true,
   emphasis,
   daysBasis,
   allowProgressEdit = false,
@@ -49,7 +55,7 @@ export function DeliverablesTable({
   const dueEmphasis = emphasis ?? (role === 'PM' ? 'client' : 'internal');
   const activeDaysBasis = daysBasis ?? dueEmphasis;
   const daysHeader = activeDaysBasis === 'client' ? 'Days to Client' : 'Days to Internal';
-  const showNoteColumn = role === 'LEAD';
+  const showNoteColumn = role === 'LEAD' || role === 'PM';
   const colCount = 9 + (showNoteColumn ? 1 : 0);
 
   const [chipFilter, setChipFilter] = useState<FilterState>({
@@ -64,21 +70,26 @@ export function DeliverablesTable({
   // Stable reference for downstream useMemo deps.
   const all = data ?? EMPTY_ROWS;
 
+  const scopedRows = useMemo(
+    () => applyTableScope(all, ownerUserId, phaseScope),
+    [all, ownerUserId, phaseScope],
+  );
+
   const ownerOptions = useMemo(() => {
     const seen = new Map<string, string>();
-    for (const d of all) {
+    for (const d of scopedRows) {
       if (d.owner_user_id && d.owner_display_name) seen.set(d.owner_user_id, d.owner_display_name);
     }
     return Array.from(seen.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [all]);
+  }, [scopedRows]);
 
   const disciplineOptions = useMemo(() => {
     const set = new Set<string>();
-    for (const d of all) set.add(d.discipline);
+    for (const d of scopedRows) set.add(d.discipline);
     return Array.from(set).sort();
-  }, [all]);
+  }, [scopedRows]);
 
   // Effective filter merges chip phases with the externally-driven phase
   // filter from the funnel. We never write phaseFilter into chipFilter.
@@ -88,9 +99,14 @@ export function DeliverablesTable({
     return set;
   }, [chipFilter.phases, phaseFilter]);
 
+  const phaseOptions = useMemo<Array<ActPhase | 'LATE'> | undefined>(() => {
+    if (!phaseScope) return undefined;
+    return ['LATE', ...phaseScope];
+  }, [phaseScope]);
+
   const filtered = useMemo(
-    () => filterDeliverables(all, chipFilter, effectivePhases, ownerUserId),
-    [all, chipFilter, effectivePhases, ownerUserId],
+    () => filterDeliverables(scopedRows, chipFilter, effectivePhases),
+    [scopedRows, chipFilter, effectivePhases],
   );
   const sorted = useMemo(() => sortDeliverables(filtered, sort, activeDaysBasis), [filtered, sort, activeDaysBasis]);
 
@@ -127,7 +143,9 @@ export function DeliverablesTable({
         ownerOptions={ownerOptions}
         disciplineOptions={disciplineOptions}
         resultCount={sorted.length}
-        totalCount={all.length}
+        totalCount={scopedRows.length}
+        phaseOptions={phaseOptions}
+        showOwnerFilter={showOwnerFilter}
       />
 
       <div className="dt-wrapper">
@@ -162,7 +180,7 @@ export function DeliverablesTable({
               </th>
               <th className="dt__th dt__th--action" aria-label="Actions" />
               {showNoteColumn && (
-                <th className="dt__th dt__th--note" aria-label="Lead note" />
+                <th className="dt__th dt__th--note" aria-label="Internal note" />
               )}
             </tr>
           </thead>
@@ -207,11 +225,9 @@ function filterDeliverables(
   rows: Deliverable[],
   chipFilter: FilterState,
   effectivePhases: Set<ActPhase | 'LATE'>,
-  ownerUserId: string | null,
 ): Deliverable[] {
   const q = chipFilter.query.trim().toLowerCase();
   return rows.filter((d) => {
-    if (ownerUserId && d.owner_user_id !== ownerUserId) return false;
     if (chipFilter.owner && d.owner_user_id !== chipFilter.owner) return false;
     if (chipFilter.discipline && d.discipline !== chipFilter.discipline) return false;
     if (effectivePhases.size > 0) {
@@ -229,6 +245,18 @@ function filterDeliverables(
         (d.owner_display_name?.toLowerCase() ?? '');
       if (!hay.includes(q)) return false;
     }
+    return true;
+  });
+}
+
+function applyTableScope(
+  rows: Deliverable[],
+  ownerUserId: string | null,
+  phaseScope: readonly ActPhase[] | null,
+): Deliverable[] {
+  return rows.filter((d) => {
+    if (ownerUserId && d.owner_user_id !== ownerUserId) return false;
+    if (phaseScope && !phaseScope.includes(d.act_phase)) return false;
     return true;
   });
 }

@@ -31,7 +31,7 @@ export function ProgressCell({ deliverableId, value, editable = false }: Progres
             onClick={() => handleClick(step)}
             title={`${step}%`}
           >
-            {step === 0 ? '—' : step}
+            {step}
           </button>
         ))}
       </div>
@@ -39,7 +39,7 @@ export function ProgressCell({ deliverableId, value, editable = false }: Progres
   }
 
   if (current === null) {
-    return <span className="prog-bar__none">—</span>;
+    return <span className="prog-bar__none">-</span>;
   }
 
   return (

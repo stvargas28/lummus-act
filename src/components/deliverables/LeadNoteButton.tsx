@@ -54,7 +54,7 @@ export function LeadNoteButton({ deliverableId, initialNote, docRef }: LeadNoteB
         className={`note-btn ${hasNote ? 'note-btn--filled' : 'note-btn--empty'}`}
         onClick={openPopover}
         aria-label={hasNote ? `Edit note for ${docRef}` : `Add note for ${docRef}`}
-        title={hasNote ? 'Edit lead note' : 'Add lead note'}
+        title={hasNote ? 'Edit internal note' : 'Add internal note'}
       >
         {hasNote ? <NoteIconFilled /> : <NoteIconOutline />}
       </button>
@@ -67,18 +67,18 @@ export function LeadNoteButton({ deliverableId, initialNote, docRef }: LeadNoteB
               className="note-popover"
               style={{ top: pos.top, right: pos.right }}
               role="dialog"
-              aria-label={`Lead note — ${docRef}`}
+              aria-label={`Internal note — ${docRef}`}
             >
               <div className="note-popover__header">
                 <span className="note-popover__title mono">{docRef}</span>
-                <span className="note-popover__subtitle">Lead note (private)</span>
+                <span className="note-popover__subtitle">Internal note (Lead / PM)</span>
               </div>
               <textarea
                 className="note-popover__textarea"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 rows={4}
-                placeholder="Add a private note…"
+                placeholder="Add an internal note…"
                   autoFocus
               />
               <div className="note-popover__actions">

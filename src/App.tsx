@@ -7,6 +7,8 @@ import { ToastProvider } from './contexts/ToastContext';
 import { AppShell } from './components/layout/AppShell';
 import { ToastStack } from './components/shared/ToastStack';
 import { DashboardPage } from './pages/DashboardPage';
+import { DeliverablesPage } from './pages/DeliverablesPage';
+import { MyWorkPage } from './pages/MyWorkPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { useActiveRole } from './hooks/useActiveRole';
 import type { Role } from './api/types';
@@ -58,7 +60,7 @@ export default function App() {
                     path="/deliverables"
                     element={
                       <RoleGuard allow={['LEAD', 'PM', 'ENGINEER']}>
-                        <PlaceholderPage title="Deliverables" />
+                        <DeliverablesPage />
                       </RoleGuard>
                     }
                   />
@@ -66,7 +68,7 @@ export default function App() {
                     path="/my-work"
                     element={
                       <RoleGuard allow={['LEAD', 'ENGINEER']}>
-                        <PlaceholderPage title="My Work" />
+                        <MyWorkPage />
                       </RoleGuard>
                     }
                   />

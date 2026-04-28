@@ -25,6 +25,8 @@ interface FilterBarProps {
   disciplineOptions: string[];
   resultCount: number;
   totalCount: number;
+  phaseOptions?: Array<ActPhase | 'LATE'>;
+  showOwnerFilter?: boolean;
 }
 
 export function FilterBar({
@@ -33,7 +35,13 @@ export function FilterBar({
   ownerOptions,
   resultCount,
   totalCount,
+  phaseOptions,
+  showOwnerFilter = true,
 }: FilterBarProps) {
+  const visiblePhaseFilters = phaseOptions
+    ? PHASE_FILTERS.filter((p) => phaseOptions.includes(p.key))
+    : PHASE_FILTERS;
+
   const togglePhase = (key: ActPhase | 'LATE') => {
     const next = new Set(state.phases);
     if (next.has(key)) next.delete(key);
@@ -65,7 +73,7 @@ export function FilterBar({
         >
           All
         </button>
-        {PHASE_FILTERS.map((p) => (
+        {visiblePhaseFilters.map((p) => (
           <button
             key={p.key}
             type="button"
@@ -79,7 +87,7 @@ export function FilterBar({
         ))}
       </div>
 
-      {ownerOptions.length > 0 && (
+      {showOwnerFilter && ownerOptions.length > 0 && (
         <select
           className="filter-bar__select"
           value={state.owner ?? ''}

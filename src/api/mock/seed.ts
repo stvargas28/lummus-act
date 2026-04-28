@@ -331,7 +331,7 @@ const SYNTHETIC_LEAD_NOTES = [
 ];
 
 /**
- * Lead-only scratch note (MVP §7 / UI §4.5). About 1 in 8 deliverables
+ * Lead/PM internal scratch note (MVP §7 / UI §4.5). About 1 in 8 deliverables
  * carries a synthetic note so the popover/icon UI exercises both states.
  * Empty (null) is the common case.
  */

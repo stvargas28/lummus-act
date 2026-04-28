@@ -118,9 +118,9 @@ export interface Deliverable {
   engineer_progress_percent: number | null;
 
   /**
-   * Lead-only informal scratch note, single current value, overwritten in
-   * place. No formal audit, no alert trigger (MVP §7, UI §4.5). Engineers
-   * never see this; PM visibility TBD.
+   * Lead/PM informal internal scratch note, single current value, overwritten
+   * in place. No formal audit, no alert trigger (MVP §7, UI §4.5). Engineers
+   * never see this.
    */
   lead_private_note: string | null;
 }
