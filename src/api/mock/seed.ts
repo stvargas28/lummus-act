@@ -228,7 +228,11 @@ function synthesizeReview(
 ): DeliverableReview | null {
   if (phase !== 'UNDER_REVIEW' && phase !== 'REVISING') return null;
 
-  const members = MEMBERS[projectId].filter((m) => m.role === 'ENGINEER');
+  const project = PROJECTS[projectId];
+  const members = MEMBERS[projectId];
+  const lead = members.find((m) => m.user_id === project.lead_user_id);
+  const pm = members.find((m) => m.user_id === project.pm_user_id);
+  const engineers = members.filter((m) => m.role === 'ENGINEER');
   const seedBase = raw.document_reference;
 
   // Sent date: 2-12 business days ago
@@ -239,11 +243,15 @@ function synthesizeReview(
   const dueIso = shiftIso(sentIso, 10);
 
   const isBottleneck = bottleneckRefs.has(raw.document_reference);
-  const reviewerCount = isBottleneck ? 3 : 2 + (hash(seedBase + 'rcount') % 3);
+  const engineerReviewerCount = isBottleneck ? 2 : 1 + (hash(seedBase + 'rcount') % 3);
 
-  // Choose reviewers deterministically
-  const startIdx = hash(seedBase + 'start') % members.length;
-  const reviewers = Array.from({ length: reviewerCount }, (_, i) => members[(startIdx + i) % members.length]);
+  // PM and Lead are usually on the review, with engineers added by domain.
+  const startIdx = hash(seedBase + 'start') % engineers.length;
+  const domainReviewers = Array.from(
+    { length: engineerReviewerCount },
+    (_, i) => engineers[(startIdx + i) % engineers.length],
+  );
+  const reviewers = [pm, lead, ...domainReviewers].filter((m): m is ProjectMember => Boolean(m));
 
   // Comments: for bottleneck, all but one have responded; for normal review, half-ish
   const recipients: ReviewRecipient[] = reviewers.map((m, i) => {
@@ -252,7 +260,7 @@ function synthesizeReview(
       // Closed-style: all responded with comments
       responded = true;
     } else if (isBottleneck) {
-      responded = i !== reviewerCount - 1; // last reviewer is the holdout
+      responded = i !== reviewers.length - 1; // last reviewer is the holdout
     } else {
       responded = rand01(seedBase + 'r' + i) < 0.5;
     }
@@ -317,8 +325,9 @@ function synthesizeReview(
 function synthesizeEngineerProgress(docRef: string, phase: ActPhase, hasOwner: boolean): number | null {
   if (!hasOwner) return null;
   if (phase === 'NOT_STARTED') return 0;
-  if (phase === 'ISSUED') return 100;
+  if (phase === 'UNDER_REVIEW' || phase === 'READY_FOR_ISSUE' || phase === 'ISSUED') return 100;
   const r = hash(docRef + 'progress') % 3;
+  if (phase === 'REVISING') return [0, 25, 50][r];
   return [25, 50, 75][r];
 }
 
@@ -467,6 +476,22 @@ export function updateEngineerProgress(deliverableId: string, percent: number | 
   for (const pid of Object.keys(_cache)) {
     const d = _cache[pid].deliverables.find((x) => x.id === deliverableId);
     if (d) { d.engineer_progress_percent = percent; return d; }
+  }
+  throw new Error(`Deliverable ${deliverableId} not found`);
+}
+
+export function updateDeliverableOwner(deliverableId: string, ownerUserId: string | null): Deliverable {
+  for (const pid of Object.keys(_cache)) {
+    const data = _cache[pid];
+    const d = data.deliverables.find((x) => x.id === deliverableId);
+    if (!d) continue;
+
+    const owner = ownerUserId ? data.members.find((m) => m.user_id === ownerUserId) ?? null : null;
+    d.owner_user_id = owner?.user_id ?? null;
+    d.owner_display_name = owner?.display_name ?? null;
+    if (d.owner_user_id === null) d.engineer_progress_percent = null;
+    else if (d.engineer_progress_percent === null) d.engineer_progress_percent = 0;
+    return d;
   }
   throw new Error(`Deliverable ${deliverableId} not found`);
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import type { ActPhase, Deliverable, Role } from '../../api/types';
+import type { ActPhase, Deliverable, ProjectMember, Role } from '../../api/types';
 import { useDeliverables } from '../../hooks/useDeliverables';
+import { useProjectMembers } from '../../hooks/useProjectMembers';
 import { FilterBar, type FilterState } from './FilterBar';
 import { DeliverableRow } from './DeliverableRow';
 import './DeliverablesTable.css';
@@ -52,6 +53,7 @@ export function DeliverablesTable({
   allowProgressEdit = false,
 }: DeliverablesTableProps) {
   const { data, loading, error } = useDeliverables(projectId);
+  const members = useProjectMembers(projectId);
   const dueEmphasis = emphasis ?? (role === 'PM' ? 'client' : 'internal');
   const activeDaysBasis = daysBasis ?? dueEmphasis;
   const daysHeader = activeDaysBasis === 'client' ? 'Days to Client' : 'Days to Internal';
@@ -84,6 +86,12 @@ export function DeliverablesTable({
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [scopedRows]);
+
+  const assignableMembers = useMemo<ProjectMember[]>(() => {
+    return (members.data ?? [])
+      .filter((m) => m.role === 'ENGINEER')
+      .sort((a, b) => a.display_name.localeCompare(b.display_name));
+  }, [members.data]);
 
   const disciplineOptions = useMemo(() => {
     const set = new Set<string>();
@@ -209,6 +217,7 @@ export function DeliverablesTable({
                   daysBasis={activeDaysBasis}
                   showNoteColumn={showNoteColumn}
                   progressEditable={allowProgressEdit}
+                  assignableMembers={assignableMembers}
                 />
               ))
             )}

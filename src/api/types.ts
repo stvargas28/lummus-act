@@ -110,10 +110,12 @@ export interface Deliverable {
   days_remaining_client: number | null;
 
   /**
-   * Self-reported execution progress, 0–100, stepped 0/25/50/75/100 in the
-   * MVP control. Editable only by the assigned engineer from My Work.
-   * Visible to all roles. Does NOT drive ACT phase, overdue flag, or alert
-   * triggers — context only (MVP §7, UI §2.1).
+   * Self-reported progress for the current engineer action cycle, 0-100,
+   * stepped 0/25/50/75/100 in the MVP control. Editable only by the assigned
+   * engineer from My Work. It resets when work comes back for revision, and
+   * locks as complete while the item is in review/ready/issued. Visible to all
+   * roles. Does NOT drive ACT phase, overdue flag, or alert triggers - context
+   * only (MVP §7, UI §2.1).
    */
   engineer_progress_percent: number | null;
 

@@ -19,6 +19,10 @@ export async function updateEngineerProgress(deliverableId: string, percent: num
   return seed.updateEngineerProgress(deliverableId, percent);
 }
 
+export async function updateDeliverableOwner(deliverableId: string, ownerUserId: string | null): Promise<Deliverable> {
+  return seed.updateDeliverableOwner(deliverableId, ownerUserId);
+}
+
 export async function listProjects(): Promise<Project[]> {
   return seed.listProjects();
 }

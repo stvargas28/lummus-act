@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { ActPhase, Deliverable } from '../api/types';
+import type { ActPhase, Deliverable, Role } from '../api/types';
 import { useActiveRole } from '../hooks/useActiveRole';
 import { useAuth } from '../hooks/useAuth';
 import { useDeliverables } from '../hooks/useDeliverables';
@@ -22,14 +22,14 @@ export function MyWorkPage() {
     [deliverables.data, persona?.user_id],
   );
 
-  if (!projectId || !role || role !== 'ENGINEER' || !persona) {
+  if (!projectId || !role || !persona || (role !== 'ENGINEER' && role !== 'LEAD')) {
     return null;
   }
 
   return (
     <div className="my-work-page">
       <PageHeader
-        crumbs={[persona.display_name, 'Engineer']}
+        crumbs={[persona.display_name, roleLabel(role)]}
         title="My Work"
       />
 
@@ -45,7 +45,7 @@ export function MyWorkPage() {
         </div>
         <DeliverablesTable
           projectId={projectId}
-          role={role}
+          role="ENGINEER"
           ownerUserId={persona.user_id}
           phaseScope={ACTIVE_PHASES}
           showOwnerFilter={false}
@@ -96,7 +96,7 @@ export function MyWorkPage() {
           <div className="my-work-waiting-content">
             <DeliverablesTable
               projectId={projectId}
-              role={role}
+              role="ENGINEER"
               ownerUserId={persona.user_id}
               phaseScope={WAITING_PHASES}
               showOwnerFilter={false}
@@ -116,4 +116,8 @@ function countEngineerWork(rows: Deliverable[], userId: string | null) {
     active: mine.filter((d) => ACTIVE_PHASES.includes(d.act_phase)).length,
     waiting: mine.filter((d) => WAITING_PHASES.includes(d.act_phase)).length,
   };
+}
+
+function roleLabel(role: Role): string {
+  return role[0] + role.slice(1).toLowerCase();
 }

@@ -9,6 +9,7 @@ import { ToastStack } from './components/shared/ToastStack';
 import { DashboardPage } from './pages/DashboardPage';
 import { DeliverablesPage } from './pages/DeliverablesPage';
 import { MyWorkPage } from './pages/MyWorkPage';
+import { MyReviewsPage } from './pages/MyReviewsPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { useActiveRole } from './hooks/useActiveRole';
 import type { Role } from './api/types';
@@ -76,18 +77,19 @@ export default function App() {
                     path="/my-reviews"
                     element={
                       <RoleGuard allow={['LEAD', 'ENGINEER', 'PM']}>
-                        <PlaceholderPage title="My Reviews" />
+                        <MyReviewsPage />
                       </RoleGuard>
                     }
                   />
                   <Route
-                    path="/alerts"
+                    path="/alert-history"
                     element={
                       <RoleGuard allow={['LEAD', 'PM']}>
-                        <PlaceholderPage title="Alerts" />
+                        <PlaceholderPage title="Alert History" />
                       </RoleGuard>
                     }
                   />
+                  <Route path="/alerts" element={<Navigate to="/alert-history" replace />} />
                   <Route
                     path="/settings"
                     element={
