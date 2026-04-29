@@ -2,6 +2,7 @@ import braskemRaw from '../../data/braskem.json';
 import shintechRaw from '../../data/shintech.json';
 import type {
   ActPhase,
+  AlertHistoryItem,
   AttentionItem,
   Deliverable,
   DeliverableReview,
@@ -107,6 +108,10 @@ function daysRemainingFrom(today: Date, dueIso: string | null): number | null {
   if (!dueIso) return null;
   const due = parseDate(dueIso)!;
   return businessDaysBetween(today, due);
+}
+
+function hoursAgo(h: number): string {
+  return new Date(NOW.getTime() - h * 60 * 60 * 1000).toISOString();
 }
 
 function shiftIso(iso: string, days: number): string {
@@ -830,6 +835,253 @@ export function getPendingReviewsForUser(projectId: string, userId: string): Pen
     });
   }
   return out;
+}
+
+// ---------- alert history synthesis (MVP §9.8) ----------
+
+const _alertHistoryCache: Record<string, AlertHistoryItem[]> = {};
+
+export function getAlertHistory(projectId: string): AlertHistoryItem[] {
+  if (_alertHistoryCache[projectId]) return _alertHistoryCache[projectId];
+
+  const { members, deliverables } = buildProject(projectId);
+  const project = PROJECTS[projectId];
+  if (!project) throw new Error(`Unknown project ${projectId}`);
+
+  const lead = members.find((m) => m.user_id === project.lead_user_id)!;
+  const pm = members.find((m) => m.user_id === project.pm_user_id)!;
+  const engs = members.filter((m) => m.role === 'ENGINEER');
+  const active = deliverables.filter((d) => d.act_phase !== 'ISSUED');
+  if (active.length === 0) return [];
+
+  const pick = (i: number) => active[i % active.length];
+  const eng = (i: number) => engs[i % engs.length];
+
+  const items: AlertHistoryItem[] = [
+    {
+      id: `ah-${projectId}-1`,
+      project_id: projectId,
+      created_at: hoursAgo(2),
+      alert_type: 'ALERT_14_CLIENT_OVERDUE',
+      alert_type_label: 'Client Deadline Missed',
+      deliverable_id: pick(0).id,
+      document_reference: pick(0).document_reference,
+      title: pick(0).title,
+      recipient_user_id: pm.user_id,
+      recipient_display_name: pm.display_name,
+      trigger_text: `${pick(0).document_reference} is past client due date`,
+      source: 'AUTO',
+      source_display_name: null,
+      engagement: 'SENT',
+      acknowledged_at: null,
+      primary_action_clicked_at: null,
+      status: 'OPEN',
+      resolved_at: null,
+      resolution_reason: null,
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-2`,
+      project_id: projectId,
+      created_at: hoursAgo(5),
+      alert_type: 'ALERT_4_LAST_REVIEWER_BOTTLENECK',
+      alert_type_label: 'Last Reviewer Bottleneck',
+      deliverable_id: pick(1).id,
+      document_reference: pick(1).document_reference,
+      title: pick(1).title,
+      recipient_user_id: eng(0).user_id,
+      recipient_display_name: eng(0).display_name,
+      trigger_text: `${eng(0).display_name} is the last pending reviewer`,
+      source: 'AUTO',
+      source_display_name: null,
+      engagement: 'ACKNOWLEDGED',
+      acknowledged_at: hoursAgo(4),
+      primary_action_clicked_at: null,
+      status: 'OPEN',
+      resolved_at: null,
+      resolution_reason: null,
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-3`,
+      project_id: projectId,
+      created_at: hoursAgo(24),
+      alert_type: 'MANUAL_NUDGE',
+      alert_type_label: 'Manual Nudge',
+      deliverable_id: pick(2).id,
+      document_reference: pick(2).document_reference,
+      title: pick(2).title,
+      recipient_user_id: eng(1).user_id,
+      recipient_display_name: eng(1).display_name,
+      trigger_text: `${lead.display_name} sent a manual reminder`,
+      source: 'MANUAL',
+      source_display_name: lead.display_name,
+      engagement: 'ACTION_CLICKED',
+      acknowledged_at: hoursAgo(23),
+      primary_action_clicked_at: hoursAgo(22),
+      status: 'OPEN',
+      resolved_at: null,
+      resolution_reason: null,
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-4`,
+      project_id: projectId,
+      created_at: hoursAgo(48),
+      alert_type: 'ALERT_11_CLIENT_DUE_NO_REVIEW',
+      alert_type_label: 'Client Due Approaching',
+      deliverable_id: pick(3).id,
+      document_reference: pick(3).document_reference,
+      title: pick(3).title,
+      recipient_user_id: lead.user_id,
+      recipient_display_name: lead.display_name,
+      trigger_text: `${pick(3).document_reference} due to client in 5 days, no review started`,
+      source: 'AUTO',
+      source_display_name: null,
+      engagement: 'ACTION_CLICKED',
+      acknowledged_at: hoursAgo(47),
+      primary_action_clicked_at: hoursAgo(46),
+      status: 'RESOLVED',
+      resolved_at: hoursAgo(45),
+      resolution_reason: 'phase_change',
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-5`,
+      project_id: projectId,
+      created_at: hoursAgo(72),
+      alert_type: 'ALERT_4_LAST_REVIEWER_BOTTLENECK',
+      alert_type_label: 'Last Reviewer Bottleneck',
+      deliverable_id: pick(4).id,
+      document_reference: pick(4).document_reference,
+      title: pick(4).title,
+      recipient_user_id: eng(2).user_id,
+      recipient_display_name: eng(2).display_name,
+      trigger_text: `${eng(2).display_name} is the last pending reviewer`,
+      source: 'AUTO',
+      source_display_name: null,
+      engagement: 'SENT',
+      acknowledged_at: null,
+      primary_action_clicked_at: null,
+      status: 'RESOLVED',
+      resolved_at: hoursAgo(60),
+      resolution_reason: 'action_taken',
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-6`,
+      project_id: projectId,
+      created_at: hoursAgo(80),
+      alert_type: 'ALERT_13_CLIENT_DUE_UNDER_REVIEW',
+      alert_type_label: 'Still in Review',
+      deliverable_id: pick(5).id,
+      document_reference: pick(5).document_reference,
+      title: pick(5).title,
+      recipient_user_id: pm.user_id,
+      recipient_display_name: pm.display_name,
+      trigger_text: `${pick(5).document_reference} due to client in 2 days, still in review`,
+      source: 'AUTO',
+      source_display_name: null,
+      engagement: 'SENT',
+      acknowledged_at: null,
+      primary_action_clicked_at: null,
+      status: 'OPEN',
+      resolved_at: null,
+      resolution_reason: null,
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-7`,
+      project_id: projectId,
+      created_at: hoursAgo(96),
+      alert_type: 'MANUAL_NUDGE',
+      alert_type_label: 'Manual Nudge',
+      deliverable_id: pick(6).id,
+      document_reference: pick(6).document_reference,
+      title: pick(6).title,
+      recipient_user_id: eng(3).user_id,
+      recipient_display_name: eng(3).display_name,
+      trigger_text: `${pm.display_name} sent a manual reminder`,
+      source: 'MANUAL',
+      source_display_name: pm.display_name,
+      engagement: 'ACKNOWLEDGED',
+      acknowledged_at: hoursAgo(95),
+      primary_action_clicked_at: null,
+      status: 'RESOLVED',
+      resolved_at: hoursAgo(90),
+      resolution_reason: 'action_taken',
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-8`,
+      project_id: projectId,
+      created_at: hoursAgo(120),
+      alert_type: 'ALERT_4_LAST_REVIEWER_BOTTLENECK',
+      alert_type_label: 'Last Reviewer Bottleneck',
+      deliverable_id: pick(7).id,
+      document_reference: pick(7).document_reference,
+      title: pick(7).title,
+      recipient_user_id: eng(0).user_id,
+      recipient_display_name: eng(0).display_name,
+      trigger_text: `${eng(0).display_name} is the last pending reviewer`,
+      source: 'AUTO',
+      source_display_name: null,
+      engagement: 'SENT',
+      acknowledged_at: null,
+      primary_action_clicked_at: null,
+      status: 'OPEN',
+      resolved_at: null,
+      resolution_reason: null,
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-9`,
+      project_id: projectId,
+      created_at: hoursAgo(144),
+      alert_type: 'ALERT_11_CLIENT_DUE_NO_REVIEW',
+      alert_type_label: 'Client Due Approaching',
+      deliverable_id: pick(8).id,
+      document_reference: pick(8).document_reference,
+      title: pick(8).title,
+      recipient_user_id: lead.user_id,
+      recipient_display_name: lead.display_name,
+      trigger_text: `${pick(8).document_reference} due to client in 7 days, no review started`,
+      source: 'AUTO',
+      source_display_name: null,
+      engagement: 'SENT',
+      acknowledged_at: null,
+      primary_action_clicked_at: null,
+      status: 'RESOLVED',
+      resolved_at: hoursAgo(130),
+      resolution_reason: 'phase_change',
+      view_url: null,
+    },
+    {
+      id: `ah-${projectId}-10`,
+      project_id: projectId,
+      created_at: hoursAgo(168),
+      alert_type: 'ALERT_4_LAST_REVIEWER_BOTTLENECK',
+      alert_type_label: 'Last Reviewer Bottleneck',
+      deliverable_id: pick(9).id,
+      document_reference: pick(9).document_reference,
+      title: pick(9).title,
+      recipient_user_id: eng(1).user_id,
+      recipient_display_name: eng(1).display_name,
+      trigger_text: `${eng(1).display_name} is the last pending reviewer`,
+      source: 'AUTO',
+      source_display_name: null,
+      engagement: 'SENT',
+      acknowledged_at: null,
+      primary_action_clicked_at: null,
+      status: 'FAILED',
+      resolved_at: null,
+      resolution_reason: null,
+      view_url: null,
+    },
+  ];
+
+  _alertHistoryCache[projectId] = items;
+  return items;
 }
 
 export const __TODAY = TODAY_ISO;

@@ -181,3 +181,35 @@ export interface PendingReview {
   days_since_sent: number;
   review_due_date: string;
 }
+
+export type AlertHistorySource = 'AUTO' | 'MANUAL';
+export type AlertHistoryStatus = 'OPEN' | 'RESOLVED' | 'FAILED';
+export type AlertHistoryEngagement = 'SENT' | 'ACKNOWLEDGED' | 'ACTION_CLICKED';
+
+/**
+ * One entry in the Alert History log (MVP §9.8, UI §2.5).
+ * Represents a fired alert, manual nudge, or Teams card interaction.
+ * This is a history record — it does not imply an action is required.
+ */
+export interface AlertHistoryItem {
+  id: string;
+  project_id: string;
+  created_at: string;
+  alert_type: string;
+  alert_type_label: string;
+  deliverable_id: string | null;
+  document_reference: string | null;
+  title: string | null;
+  recipient_user_id: string | null;
+  recipient_display_name: string;
+  trigger_text: string;
+  source: AlertHistorySource;
+  source_display_name: string | null;
+  engagement: AlertHistoryEngagement;
+  acknowledged_at: string | null;
+  primary_action_clicked_at: string | null;
+  status: AlertHistoryStatus;
+  resolved_at: string | null;
+  resolution_reason: string | null;
+  view_url: string | null;
+}

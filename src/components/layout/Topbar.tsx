@@ -1,8 +1,13 @@
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
+import { useActiveRole } from '../../hooks/useActiveRole';
+import { useAlertHistory } from '../../hooks/useAlertHistory';
 import { useProjects } from '../../hooks/useProjects';
 import { useProject } from '../../hooks/useProject';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import type { Persona, Project, ProjectMembership } from '../../api/types';
+import type { AlertHistoryItem, Persona, Project, ProjectMembership } from '../../api/types';
 import './Topbar.css';
 
 const ROLE_LABEL: Record<ProjectMembership['role'], string> = {
@@ -10,6 +15,10 @@ const ROLE_LABEL: Record<ProjectMembership['role'], string> = {
   PM: 'PM',
   ENGINEER: 'Engineer',
 };
+
+const DT_FMT = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+});
 
 interface TopbarProps {
   collapsed: boolean;
@@ -21,6 +30,11 @@ export function Topbar({ collapsed, onToggleSidebar }: TopbarProps) {
   const { persona, personas, setPersonaId } = useAuth();
   const { projectId, setProjectId } = useProject();
   const projects = useProjects();
+  const role = useActiveRole();
+
+  const alertHistory = useAlertHistory(projectId ?? '');
+  const [bellPos, setBellPos] = useState<{ top: number; right: number } | null>(null);
+  const bellRef = useRef<HTMLButtonElement>(null);
 
   const personaProjects: Array<{ project: Project; membership: ProjectMembership }> = (() => {
     if (!persona || !projects.data) return [];
@@ -36,9 +50,21 @@ export function Topbar({ collapsed, onToggleSidebar }: TopbarProps) {
   const activeEntry = personaProjects.find((e) => e.project.id === projectId);
   const projectName = activeEntry?.project.name ?? personaProjects[0]?.project.name ?? '…';
 
+  function openBell() {
+    if (bellPos !== null) {
+      setBellPos(null);
+      return;
+    }
+    const rect = bellRef.current?.getBoundingClientRect();
+    setBellPos(
+      rect
+        ? { top: rect.bottom + 8, right: window.innerWidth - rect.right }
+        : { top: 60, right: 18 },
+    );
+  }
+
   return (
     <header className="topbar">
-      {/* Hamburger — controls sidebar collapse */}
       <button
         className="topbar__hamburger"
         onClick={onToggleSidebar}
@@ -52,7 +78,6 @@ export function Topbar({ collapsed, onToggleSidebar }: TopbarProps) {
         </svg>
       </button>
 
-      {/* Project pill — overlay select for cohesive styling */}
       <div className="topbar__project">
         <span className="topbar__project-tag mono">{projectId ?? '—'}</span>
         <span className="topbar__project-name">{projectName}</span>
@@ -79,14 +104,11 @@ export function Topbar({ collapsed, onToggleSidebar }: TopbarProps) {
         )}
       </div>
 
-      {/* Spacer */}
       <div className="topbar__center" />
 
-      {/* Right cluster */}
       <div className="topbar__right">
         <DevPersonaSwitcher persona={persona} personas={personas} onChange={setPersonaId} />
 
-        {/* Theme slider */}
         <label
           className="theme-toggle"
           title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
@@ -121,13 +143,18 @@ export function Topbar({ collapsed, onToggleSidebar }: TopbarProps) {
           </span>
         </label>
 
-        {/* Alerts bell */}
-        <button className="topbar__icon-btn topbar__icon-btn--with-badge" aria-label="Alerts" title="Alerts">
+        <button
+          ref={bellRef}
+          className="topbar__icon-btn"
+          aria-label="Alert history"
+          title="Alert history"
+          aria-expanded={bellPos !== null}
+          onClick={openBell}
+        >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M8 1.5a4.5 4.5 0 0 0-4.5 4.5c0 2-.5 3-1.5 4h12c-1-1-1.5-2-1.5-4A4.5 4.5 0 0 0 8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/>
             <path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
           </svg>
-          <span className="topbar__badge mono">4</span>
         </button>
 
         {persona && (
@@ -140,8 +167,100 @@ export function Topbar({ collapsed, onToggleSidebar }: TopbarProps) {
           </div>
         )}
       </div>
+
+      {bellPos !== null && (
+        <AlertBellPopover
+          pos={bellPos}
+          role={role}
+          items={alertHistory.data ?? []}
+          loading={alertHistory.loading}
+          onClose={() => setBellPos(null)}
+        />
+      )}
     </header>
   );
+}
+
+function AlertBellPopover({
+  pos,
+  role,
+  items,
+  loading,
+  onClose,
+}: {
+  pos: { top: number; right: number };
+  role: string | null;
+  items: AlertHistoryItem[];
+  loading: boolean;
+  onClose: () => void;
+}) {
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  const recent = items.slice(0, 5);
+  const isEngineer = role === 'ENGINEER';
+
+  return createPortal(
+    <>
+      <div className="tb-alert-overlay" onClick={onClose} aria-hidden="true" />
+      <div
+        ref={popoverRef}
+        className="tb-alert-popover"
+        style={{ top: pos.top, right: pos.right }}
+        role="dialog"
+        aria-label="Recent alert history"
+      >
+        <div className="tb-alert-popover__header">Recent Alert History</div>
+
+        {isEngineer ? (
+          <div className="tb-alert-popover__engineer">
+            Alerts are sent directly via Teams for your deliverables.
+          </div>
+        ) : loading ? (
+          <div className="tb-alert-popover__loading">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="tb-alert-popover__skeleton" />
+            ))}
+          </div>
+        ) : recent.length === 0 ? (
+          <div className="tb-alert-popover__empty">No alerts yet for this project.</div>
+        ) : (
+          <ul className="tb-alert-popover__list">
+            {recent.map((item) => (
+              <li key={item.id} className="tb-alert-popover__item">
+                <div className="tb-alert-popover__item-type">{item.alert_type_label}</div>
+                <div className="tb-alert-popover__item-meta">
+                  <span className="tb-alert-popover__item-recipient">{item.recipient_display_name}</span>
+                  <span className="tb-alert-popover__item-time mono">{formatDt(item.created_at)}</span>
+                </div>
+                {item.document_reference && (
+                  <div className="tb-alert-popover__item-ref mono">{item.document_reference}</div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="tb-alert-popover__footer">
+          <Link to="/alert-history" className="tb-alert-popover__footer-link" onClick={onClose}>
+            View Alert History →
+          </Link>
+        </div>
+      </div>
+    </>,
+    document.body,
+  );
+}
+
+function formatDt(iso: string): string {
+  return DT_FMT.format(new Date(iso));
 }
 
 interface DevPersonaSwitcherProps {

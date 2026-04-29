@@ -1,5 +1,6 @@
 import * as seed from './seed';
 import type {
+  AlertHistoryItem,
   AttentionItem,
   Deliverable,
   FunnelPhase,
@@ -72,4 +73,8 @@ export async function nudge(
   _recipientUserId: string,
 ): Promise<{ ok: true; sent_at: string }> {
   return { ok: true, sent_at: new Date().toISOString() };
+}
+
+export async function getAlertHistory(projectId: string): Promise<AlertHistoryItem[]> {
+  return seed.getAlertHistory(projectId);
 }

@@ -10,6 +10,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DeliverablesPage } from './pages/DeliverablesPage';
 import { MyWorkPage } from './pages/MyWorkPage';
 import { MyReviewsPage } from './pages/MyReviewsPage';
+import { AlertHistoryPage } from './pages/AlertHistoryPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { useActiveRole } from './hooks/useActiveRole';
 import type { Role } from './api/types';
@@ -85,7 +86,7 @@ export default function App() {
                     path="/alert-history"
                     element={
                       <RoleGuard allow={['LEAD', 'PM']}>
-                        <PlaceholderPage title="Alert History" />
+                        <AlertHistoryPage />
                       </RoleGuard>
                     }
                   />
