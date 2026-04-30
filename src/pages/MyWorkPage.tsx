@@ -4,8 +4,10 @@ import { useActiveRole } from '../hooks/useActiveRole';
 import { useAuth } from '../hooks/useAuth';
 import { useDeliverables } from '../hooks/useDeliverables';
 import { useProject } from '../hooks/useProject';
+import { useProjects } from '../hooks/useProjects';
 import { DeliverablesTable } from '../components/deliverables/DeliverablesTable';
 import { PageHeader } from '../components/layout/PageHeader';
+import { ProjectSetupNotice } from '../components/shared/ProjectSetupNotice';
 
 const ACTIVE_PHASES: readonly ActPhase[] = ['NOT_STARTED', 'DRAFT', 'REVISING'];
 const WAITING_PHASES: readonly ActPhase[] = ['UNDER_REVIEW', 'READY_FOR_ISSUE'];
@@ -14,6 +16,7 @@ export function MyWorkPage() {
   const role = useActiveRole();
   const { persona } = useAuth();
   const { projectId } = useProject();
+  const projects = useProjects();
   const [showWaiting, setShowWaiting] = useState(false);
   const deliverables = useDeliverables(projectId ?? '');
 
@@ -24,6 +27,20 @@ export function MyWorkPage() {
 
   if (!projectId || !role || !persona || (role !== 'ENGINEER' && role !== 'LEAD')) {
     return null;
+  }
+
+  const projectName = projects.data?.find((p) => p.id === projectId)?.name ?? projectId;
+
+  if (!deliverables.loading && (deliverables.data?.length ?? 0) === 0) {
+    return (
+      <div className="my-work-page">
+        <PageHeader
+          crumbs={[persona.display_name, roleLabel(role)]}
+          title="My Work"
+        />
+        <ProjectSetupNotice projectName={projectName} role={role} />
+      </div>
+    );
   }
 
   return (

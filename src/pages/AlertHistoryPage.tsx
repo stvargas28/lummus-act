@@ -3,8 +3,11 @@ import type { AlertHistoryEngagement, AlertHistoryItem, AlertHistorySource, Aler
 import { useActiveRole } from '../hooks/useActiveRole';
 import { useAuth } from '../hooks/useAuth';
 import { useAlertHistory } from '../hooks/useAlertHistory';
+import { useDeliverables } from '../hooks/useDeliverables';
 import { useProject } from '../hooks/useProject';
+import { useProjects } from '../hooks/useProjects';
 import { PageHeader } from '../components/layout/PageHeader';
+import { ProjectSetupNotice } from '../components/shared/ProjectSetupNotice';
 import './AlertHistoryPage.css';
 
 const DT_FMT = new Intl.DateTimeFormat('en-GB', {
@@ -17,9 +20,11 @@ export function AlertHistoryPage() {
   const role = useActiveRole();
   const { persona } = useAuth();
   const { projectId } = useProject();
+  const projects = useProjects();
   const [filter, setFilter] = useState<FilterChip>('all');
   const [query, setQuery] = useState('');
 
+  const deliverables = useDeliverables(projectId ?? '');
   const history = useAlertHistory(projectId ?? '');
 
   const stats = useMemo(() => buildStats(history.data ?? []), [history.data]);
@@ -29,6 +34,17 @@ export function AlertHistoryPage() {
   );
 
   if (!projectId || !role || !persona) return null;
+
+  const projectName = projects.data?.find((p) => p.id === projectId)?.name ?? projectId;
+
+  if (!deliverables.loading && (deliverables.data?.length ?? 0) === 0) {
+    return (
+      <div className="ah-page">
+        <PageHeader crumbs={[persona.display_name, roleLabel(role)]} title="Alert History" />
+        <ProjectSetupNotice projectName={projectName} role={role} />
+      </div>
+    );
+  }
 
   if (history.error) {
     return (

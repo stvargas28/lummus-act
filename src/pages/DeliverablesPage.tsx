@@ -1,12 +1,18 @@
 import { useState } from 'react';
 import { useActiveRole } from '../hooks/useActiveRole';
+import { useDeliverables } from '../hooks/useDeliverables';
 import { useProject } from '../hooks/useProject';
+import { useProjects } from '../hooks/useProjects';
+import { useToast } from '../hooks/useToast';
 import { DeliverablesTable } from '../components/deliverables/DeliverablesTable';
+import { ProjectSetupNotice } from '../components/shared/ProjectSetupNotice';
 import './DeliverablesPage.css';
 
 export function DeliverablesPage() {
   const role = useActiveRole();
   const { projectId } = useProject();
+  const projects = useProjects();
+  const deliverables = useDeliverables(projectId ?? '');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddDrawingModal, setShowAddDrawingModal] = useState(false);
   const [showSplitModal, setShowSplitModal] = useState(false);
@@ -16,6 +22,24 @@ export function DeliverablesPage() {
   }
 
   const isLead = role === 'LEAD';
+  const projectName = projects.data?.find((p) => p.id === projectId)?.name ?? projectId;
+  const isUnconfigured = !deliverables.loading && (deliverables.data?.length ?? 0) === 0;
+
+  if (isUnconfigured) {
+    return (
+      <div className="deliverables-page">
+        <div className="deliverables-page__header">
+          <h1>{isLead ? 'Project Setup' : 'Deliverables'}</h1>
+        </div>
+
+        {isLead ? (
+          <LeadProjectSetup projectName={projectName} />
+        ) : (
+          <ProjectSetupNotice projectName={projectName} role={role} />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="deliverables-page">
@@ -67,6 +91,99 @@ export function DeliverablesPage() {
         />
       )}
     </div>
+  );
+}
+
+function LeadProjectSetup({ projectName }: { projectName: string }) {
+  const { push } = useToast();
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [parserState, setParserState] = useState<'idle' | 'ready' | 'parsed'>('idle');
+
+  function acceptFile(file: File | null) {
+    if (!file) return;
+    setFileName(file.name);
+    setParserState('ready');
+  }
+
+  function runParser() {
+    setParserState('parsed');
+    push('Deliverable table parsed. Matching preview is ready for review.', 'success');
+  }
+
+  function onDrop(event: React.DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    acceptFile(event.dataTransfer.files[0] ?? null);
+  }
+
+  return (
+    <section className="setup-panel" aria-labelledby="setup-title">
+      <div className="setup-panel__head">
+        <span className="section-label">Project discovered</span>
+        <h2 id="setup-title" className="setup-panel__title">Start {projectName}</h2>
+        <p className="setup-panel__copy">
+          Upload the Excel deliverable table to seed ACT. The parser reads the register, creates the
+          deliverable list, and prepares matching against FusionLive.
+        </p>
+      </div>
+
+      <label
+        className={`setup-dropzone ${fileName ? 'setup-dropzone--has-file' : ''}`}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={onDrop}
+      >
+        <input
+          className="setup-dropzone__input"
+          type="file"
+          accept=".xls,.xlsx,.csv"
+          onChange={(event) => acceptFile(event.target.files?.[0] ?? null)}
+        />
+        <span className="setup-dropzone__icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M14 18V6M14 6L9.5 10.5M14 6L18.5 10.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M6 18.5V21C6 22.1046 6.89543 23 8 23H20C21.1046 23 22 22.1046 22 21V18.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </span>
+        <span className="setup-dropzone__title">
+          {fileName ?? 'Drop Excel deliverable table here'}
+        </span>
+        <span className="setup-dropzone__hint">or upload from folder</span>
+      </label>
+
+      <div className="setup-actions">
+        <button
+          type="button"
+          className="setup-actions__primary"
+          disabled={parserState === 'idle' || parserState === 'parsed'}
+          onClick={runParser}
+        >
+          {parserState === 'parsed' ? 'Parser preview ready' : 'Run parser'}
+        </button>
+        <span className="setup-actions__meta mono">
+          {parserState === 'idle'
+            ? 'Waiting for workbook'
+            : parserState === 'ready'
+              ? 'Workbook selected'
+              : '42 rows found / 38 auto-matched / 4 need Lead review'}
+        </span>
+      </div>
+
+      <div className="setup-preview" aria-hidden="true">
+        <div className="setup-preview__row setup-preview__row--head">
+          <span>Doc Ref</span>
+          <span>Owner</span>
+          <span>Internal Due</span>
+          <span>Status</span>
+        </div>
+        {['361325-ME-DW-170001', '361325-ME-SP-170002', '361325-PR-LS-170003'].map((ref, index) => (
+          <div key={ref} className="setup-preview__row">
+            <span>{ref}</span>
+            <span>{index === 2 ? 'Needs review' : 'Matched'}</span>
+            <span>{index === 0 ? '08 May 26' : index === 1 ? '12 May 26' : 'Missing'}</span>
+            <span>{index === 2 ? 'Unmatched' : 'Ready'}</span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

@@ -13,6 +13,26 @@
   transition: box-shadow 100ms ease, border-color 100ms ease;
 }
 
+[data-density='comfortable'] .kpi-card {
+  min-height: 128px;
+  padding: 19px 20px 16px;
+}
+
+[data-density='compact'] .kpi-card {
+  min-height: 96px;
+  padding: 12px 14px 11px;
+}
+
+[data-density='compact'] .kpi-card__value {
+  margin: 3px 0 2px;
+  font-size: 28px;
+}
+
+[data-density='compact'] .kpi-card__descriptor,
+[data-density='compact'] .kpi-card__delta {
+  font-size: 11px;
+}
+
 .kpi-card::before {
   content: '';
   position: absolute;

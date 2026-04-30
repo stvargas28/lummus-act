@@ -212,6 +212,28 @@
   vertical-align: middle;
 }
 
+[data-density='comfortable'] .ah-table td {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+[data-density='compact'] .ah-table {
+  font-size: var(--fs-sm);
+}
+
+[data-density='compact'] .ah-table th {
+  padding: 7px 12px;
+}
+
+[data-density='compact'] .ah-table td {
+  padding: 7px 12px;
+}
+
+[data-density='compact'] .ah-chip-tag {
+  height: 18px;
+  padding: 0 6px;
+}
+
 .ah-table__row:hover td {
   background-color: var(--color-row-hover);
 }

@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react';
 import type { PendingReview } from '../api/types';
 import { useActiveRole } from '../hooks/useActiveRole';
 import { useAuth } from '../hooks/useAuth';
+import { useDeliverables } from '../hooks/useDeliverables';
 import { usePendingReviewsForUser } from '../hooks/usePendingReviewsForUser';
 import { useProject } from '../hooks/useProject';
+import { useProjects } from '../hooks/useProjects';
 import { PageHeader } from '../components/layout/PageHeader';
+import { ProjectSetupNotice } from '../components/shared/ProjectSetupNotice';
 import './MyReviewsPage.css';
 
 const DATE_FMT = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
@@ -13,7 +16,9 @@ export function MyReviewsPage() {
   const role = useActiveRole();
   const { persona } = useAuth();
   const { projectId } = useProject();
+  const projects = useProjects();
   const [query, setQuery] = useState('');
+  const deliverables = useDeliverables(projectId ?? '');
   const reviews = usePendingReviewsForUser(projectId ?? '', persona?.user_id ?? null);
 
   const rows = useMemo(
@@ -24,6 +29,17 @@ export function MyReviewsPage() {
 
   if (!projectId || !role || !persona) {
     return null;
+  }
+
+  const projectName = projects.data?.find((p) => p.id === projectId)?.name ?? projectId;
+
+  if (!deliverables.loading && (deliverables.data?.length ?? 0) === 0) {
+    return (
+      <div className="reviews-page">
+        <PageHeader crumbs={[persona.display_name, roleLabel(role)]} title="My Reviews" />
+        <ProjectSetupNotice projectName={projectName} role={role} />
+      </div>
+    );
   }
 
   if (reviews.error) {

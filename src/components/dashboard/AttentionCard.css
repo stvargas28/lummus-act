@@ -11,6 +11,28 @@
   cursor: pointer;
 }
 
+[data-density='comfortable'] .attention-card {
+  padding: 13px 16px;
+}
+
+[data-density='compact'] .attention-card {
+  gap: 10px;
+  padding: 7px 12px;
+}
+
+[data-density='compact'] .attention-card__body {
+  gap: 2px;
+}
+
+[data-density='compact'] .attention-card__title {
+  font-size: var(--fs-sm);
+}
+
+[data-density='compact'] .attention-card__reason {
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+}
+
 .attention-card:hover {
   background-color: var(--color-row-hover);
 }

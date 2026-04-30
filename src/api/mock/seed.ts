@@ -156,6 +156,13 @@ const SHINTECH_MEMBERS: ProjectMember[] = [
   { user_id: 'u-pm-shi', display_name: 'Marcus Hale', initials: 'MH', role: 'PM', email: 'marcus.hale@lummus.com' },
 ];
 
+const TEST_MEMBERS: ProjectMember[] = [
+  { user_id: 'u-wr', display_name: 'Will Robinson', initials: 'WR', role: 'ENGINEER', email: 'will.robinson@lummus.com' },
+  { user_id: 'u-mp', display_name: 'Maria Pereira', initials: 'MP', role: 'ENGINEER', email: 'maria.pereira@lummus.com' },
+  { user_id: 'u-lead-bra', display_name: 'David Chen', initials: 'DC', role: 'LEAD', email: 'david.chen@lummus.com' },
+  { user_id: 'u-pm-bra', display_name: 'Sara Okafor', initials: 'SO', role: 'PM', email: 'sara.okafor@lummus.com' },
+];
+
 const ALIAS_TABLE: Record<string, Record<string, string>> = {
   '361325': {
     WR: 'u-wr',
@@ -183,11 +190,19 @@ const PROJECTS: Record<string, Project> = {
     lead_user_id: 'u-lead-shi',
     pm_user_id: 'u-pm-shi',
   },
+  TEST: {
+    id: 'TEST',
+    name: 'TEST PROJECT',
+    workspace_id: 'TEST',
+    lead_user_id: 'u-lead-bra',
+    pm_user_id: 'u-pm-bra',
+  },
 };
 
 const MEMBERS: Record<string, ProjectMember[]> = {
   '361325': BRASKEM_MEMBERS,
   '363780': SHINTECH_MEMBERS,
+  TEST: TEST_MEMBERS,
 };
 
 function resolveOwner(projectId: string, ownerSource: string | null): ProjectMember | null {
@@ -413,8 +428,19 @@ const _cache: Record<string, ProjectData> = {};
 function buildProject(projectId: string): ProjectData {
   if (_cache[projectId]) return _cache[projectId];
 
+  const project = PROJECTS[projectId];
+  if (!project) throw new Error(`Unknown project ${projectId}`);
+
   const raw = RAW[projectId];
-  if (!raw) throw new Error(`Unknown project ${projectId}`);
+  if (!raw) {
+    const data = {
+      project,
+      members: MEMBERS[projectId] ?? [],
+      deliverables: [],
+    };
+    _cache[projectId] = data;
+    return data;
+  }
 
   const bottleneckRefs = selectBottleneckRefs(projectId, raw.matches);
 
@@ -459,7 +485,7 @@ function buildProject(projectId: string): ProjectData {
   });
 
   const data = {
-    project: PROJECTS[projectId],
+    project,
     members: MEMBERS[projectId],
     deliverables,
   };
@@ -537,6 +563,7 @@ const PERSONAS: Persona[] = [
     memberships: [
       { project_id: '361325', role: 'LEAD' },
       { project_id: '363780', role: 'LEAD' },
+      { project_id: 'TEST', role: 'LEAD' },
     ],
   },
   {
@@ -548,6 +575,7 @@ const PERSONAS: Persona[] = [
     memberships: [
       { project_id: '361325', role: 'PM' },
       { project_id: '363780', role: 'PM' },
+      { project_id: 'TEST', role: 'PM' },
     ],
   },
   {
@@ -559,6 +587,7 @@ const PERSONAS: Persona[] = [
     memberships: [
       { project_id: '361325', role: 'ENGINEER' },
       { project_id: '363780', role: 'ENGINEER' },
+      { project_id: 'TEST', role: 'ENGINEER' },
     ],
   },
   {
@@ -578,6 +607,7 @@ const PERSONAS: Persona[] = [
     memberships: [
       { project_id: '361325', role: 'LEAD' },
       { project_id: '363780', role: 'ENGINEER' },
+      { project_id: 'TEST', role: 'ENGINEER' },
     ],
   },
 ];
