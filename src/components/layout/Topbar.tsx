@@ -111,8 +111,8 @@ export function Topbar({ collapsed, onToggleSidebar }: TopbarProps) {
 
         <label
           className="theme-toggle"
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
           <span className="theme-toggle__icon" aria-hidden="true">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

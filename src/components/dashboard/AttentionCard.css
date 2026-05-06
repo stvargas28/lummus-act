@@ -99,6 +99,43 @@
   border-color: color-mix(in srgb, var(--color-accent-green) 40%, var(--color-border));
 }
 
+[data-theme='high-contrast'] .attention-card__phase {
+  background-color: #ffffff;
+  border-width: 1.5px;
+  font-weight: var(--fw-bold);
+}
+
+[data-theme='high-contrast'] .attention-card__phase--not-started {
+  color: #334155;
+  border-color: #334155;
+}
+
+[data-theme='high-contrast'] .attention-card__phase--draft {
+  color: #6d28d9;
+  border-color: #6d28d9;
+}
+
+[data-theme='high-contrast'] .attention-card__phase--under-review {
+  color: #006d7a;
+  border-color: #006d7a;
+}
+
+[data-theme='high-contrast'] .attention-card__phase--revising {
+  color: #637400;
+  border-color: #637400;
+  background-color: #fbffd9;
+}
+
+[data-theme='high-contrast'] .attention-card__phase--ready-for-issue {
+  color: #00736e;
+  border-color: #00736e;
+}
+
+[data-theme='high-contrast'] .attention-card__phase--issued {
+  color: #006b2f;
+  border-color: #006b2f;
+}
+
 .attention-card__flag {
   flex-shrink: 0;
   padding: 1px 5px;

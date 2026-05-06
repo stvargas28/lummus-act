@@ -3,7 +3,9 @@ import { useActiveRole } from '../hooks/useActiveRole';
 import { useProjects } from '../hooks/useProjects';
 import { useProject } from '../hooks/useProject';
 import { useSettings } from '../hooks/useSettings';
+import { useTheme } from '../hooks/useTheme';
 import type { AppSettings, DefaultLanding, DueFocus, TableDensity } from '../contexts/settings-context';
+import type { Theme } from '../contexts/theme-context';
 import './SettingsPage.css';
 
 const DIGEST_TIMES = [
@@ -31,11 +33,18 @@ const LANDING_OPTIONS: Array<{ value: DefaultLanding; label: string }> = [
   { value: 'my-reviews', label: 'My Reviews' },
 ];
 
+const THEME_OPTIONS: Array<{ value: Theme; label: string }> = [
+  { value: 'light', label: 'Lummus light' },
+  { value: 'dark', label: 'Lummus dark' },
+  { value: 'high-contrast', label: 'High contrast' },
+];
+
 export function SettingsPage() {
   const role = useActiveRole();
   const { projectId } = useProject();
   const projects = useProjects();
   const { settings, updateSettings } = useSettings();
+  const { theme, setTheme } = useTheme();
 
   const projectName = projects.data?.find((p) => p.id === projectId)?.name ?? projectId ?? 'Project';
 
@@ -85,6 +94,13 @@ export function SettingsPage() {
             <div className="settings-panel__meta mono">Local preference</div>
           </div>
         </div>
+
+        <SegmentedSetting
+          label="Theme"
+          value={theme}
+          options={THEME_OPTIONS}
+          onChange={setTheme}
+        />
 
         <SegmentedSetting
           label="Table density"

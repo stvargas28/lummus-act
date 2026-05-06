@@ -1,64 +1,108 @@
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
   height: 22px;
-  padding: 0 9px;
+  padding: 0 10px;
   font-size: 10.5px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   border-radius: 5px;
   white-space: nowrap;
-  line-height: 1;
-}
-
-.chip::before {
-  content: '';
-  display: block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: currentColor;
-  opacity: 0.85;
-  flex-shrink: 0;
+  line-height: 22px;
+  border: 1px solid transparent;
+  vertical-align: middle;
+  text-align: center;
+  justify-content: center;
 }
 
 .chip--not-started {
-  border: 1px solid var(--color-border-strong);
-  color: var(--color-text-secondary);
-  background-color: transparent;
+  background-color: var(--color-phase-not-started);
+  border-color: var(--color-phase-not-started);
+  color: var(--color-text-on-dark);
 }
 
 .chip--draft {
   background-color: var(--color-phase-draft);
+  border-color: var(--color-phase-draft);
   color: var(--color-text-primary);
 }
 
 .chip--under-review {
   background-color: var(--color-accent-teal);
+  border-color: var(--color-accent-teal);
   color: white;
 }
 
 .chip--revising {
-  background-color: #c8d900;
+  background-color: var(--color-accent-lime);
+  border-color: var(--color-accent-lime);
   color: #2a3500;
 }
 
 .chip--ready {
   background-color: var(--color-accent-seafoam);
+  border-color: var(--color-accent-seafoam);
   color: var(--color-bg-dark);
 }
 
 .chip--issued {
   background-color: var(--color-accent-green);
+  border-color: var(--color-accent-green);
   color: #fff;
 }
 
 .chip--late {
   background-color: var(--color-danger);
+  border-color: var(--color-danger);
   color: #fff;
   animation: chip-pulse 1.8s ease-in-out infinite;
+}
+
+[data-theme='high-contrast'] .chip {
+  border-width: 1.5px;
+}
+
+[data-theme='high-contrast'] .chip--not-started {
+  background-color: #ffffff;
+  border-color: #334155;
+  color: #0f172a;
+}
+
+[data-theme='high-contrast'] .chip--draft {
+  background-color: #f3e8ff;
+  border-color: #6d28d9;
+  color: #3b0764;
+}
+
+[data-theme='high-contrast'] .chip--under-review {
+  background-color: #008b9a;
+  border-color: #006d7a;
+  color: #ffffff;
+}
+
+[data-theme='high-contrast'] .chip--revising {
+  background-color: #d9f000;
+  border-color: #637400;
+  color: #202900;
+}
+
+[data-theme='high-contrast'] .chip--ready {
+  background-color: #d8fffb;
+  border-color: #00736e;
+  color: #003d3a;
+}
+
+[data-theme='high-contrast'] .chip--issued {
+  background-color: #008a3d;
+  border-color: #006b2f;
+  color: #ffffff;
+}
+
+[data-theme='high-contrast'] .chip--late {
+  background-color: #d92010;
+  border-color: #991b1b;
+  color: #ffffff;
 }
 
 @keyframes chip-pulse {
