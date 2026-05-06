@@ -26,17 +26,17 @@ export function NudgeButton({ deliverableId, recipientUserId, alreadyAlertedToda
       ? `Last alert sent at ${formatRelativeHour(lastAlertAt)}. The 24h cap blocks another notification today.`
       : 'An alert was already sent today.';
     return (
-      <button className="nudge-btn nudge-btn--suppressed" disabled title={tooltip}>
-        Already reminded today
-      </button>
+      <span className="nudge-btn nudge-btn--suppressed" title={tooltip}>
+        Notified today
+      </span>
     );
   }
 
   if (state === 'sent') {
     return (
-      <button className="nudge-btn nudge-btn--sent" disabled title="Reminder sent via Teams">
-        Sent ✓
-      </button>
+      <span className="nudge-btn nudge-btn--sent" title="Reminder sent via Teams">
+        Sent
+      </span>
     );
   }
 
@@ -54,10 +54,10 @@ export function NudgeButton({ deliverableId, recipientUserId, alreadyAlertedToda
   };
 
   const disabled = !recipientUserId || state === 'sending';
-  const label = state === 'sending' ? 'Sending…' : '↑ Nudge';
+  const label = state === 'sending' ? 'Sending...' : 'Nudge ->';
   const title = recipientUserId
     ? 'Send a reminder to the responsible person via Teams'
-    : 'No assigned recipient — cannot nudge';
+    : 'No assigned recipient - cannot nudge';
 
   return (
     <button className="nudge-btn nudge-btn--active" disabled={disabled} onClick={onClick} title={title}>

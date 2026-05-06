@@ -131,6 +131,7 @@ export interface AttentionItem {
   deliverable_id: string;
   document_reference: string;
   title: string;
+  act_phase: ActPhase;
   reason_kind: AttentionReasonKind;
   reason_text: string;
   time_indicator: string;

@@ -1,111 +1,189 @@
 .attention-card {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  padding: 10px 14px;
+  align-items: start;
+  padding: 14px 18px 14px 20px;
   background-color: var(--color-bg-surface);
-  border: 1px solid var(--color-border);
-  border-left: 3px solid var(--attn-accent, var(--color-accent-teal));
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  border-left: 4px solid var(--attn-accent, var(--color-accent-teal));
   transition: background-color 0.12s ease;
-  cursor: pointer;
 }
 
 [data-density='comfortable'] .attention-card {
-  padding: 13px 16px;
+  padding: 16px 20px 16px 22px;
 }
 
 [data-density='compact'] .attention-card {
   gap: 10px;
-  padding: 7px 12px;
-}
-
-[data-density='compact'] .attention-card__body {
-  gap: 2px;
-}
-
-[data-density='compact'] .attention-card__title {
-  font-size: var(--fs-sm);
-}
-
-[data-density='compact'] .attention-card__reason {
-  font-size: var(--fs-xs);
-  line-height: 1.35;
+  padding: 10px 14px 10px 16px;
 }
 
 .attention-card:hover {
   background-color: var(--color-row-hover);
 }
 
+.attention-card--pm-intervention {
+  background-color: var(--color-danger-soft);
+}
+
 .attention-card__body {
-  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.attention-card__row1 {
+.attention-card__topline {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
-}
-
-.attention-card__flag {
-  flex-shrink: 0;
-  font-size: 12px;
-  line-height: 1;
-  color: var(--color-danger);
-  align-self: center;
-}
-
-.attention-card--pm-intervention {
-  background-color: rgba(204, 51, 0, 0.025);
 }
 
 .attention-card__ref {
   font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: var(--fw-semibold);
+  font-size: 10.5px;
+  font-weight: var(--fw-medium);
   color: var(--color-primary);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attention-card__phase {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 17px;
+  padding: 2px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.attention-card__phase--not-started {
+  color: var(--color-phase-not-started);
+  border-color: color-mix(in srgb, var(--color-phase-not-started) 40%, var(--color-border));
+}
+
+.attention-card__phase--draft {
+  color: var(--color-phase-draft);
+  border-color: color-mix(in srgb, var(--color-phase-draft) 40%, var(--color-border));
+}
+
+.attention-card__phase--under-review {
+  color: var(--color-accent-teal);
+  border-color: color-mix(in srgb, var(--color-accent-teal) 40%, var(--color-border));
+}
+
+.attention-card__phase--revising {
+  color: var(--color-accent-lime);
+  border-color: color-mix(in srgb, var(--color-accent-lime) 40%, var(--color-border));
+}
+
+.attention-card__phase--ready-for-issue {
+  color: var(--color-accent-seafoam);
+  border-color: color-mix(in srgb, var(--color-accent-seafoam) 40%, var(--color-border));
+}
+
+.attention-card__phase--issued {
+  color: var(--color-accent-green);
+  border-color: color-mix(in srgb, var(--color-accent-green) 40%, var(--color-border));
+}
+
+.attention-card__flag {
+  flex-shrink: 0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background-color: var(--color-danger);
+  color: var(--color-text-on-dark);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  line-height: 1.4;
+  letter-spacing: 0.04em;
 }
 
 .attention-card__title {
   font-size: 13px;
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.attention-card__why {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   min-width: 0;
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.attention-card__level {
+  flex-shrink: 0;
+  color: var(--attn-accent, var(--color-accent-teal));
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+}
+
+.attention-card__dot {
+  color: var(--color-text-muted);
 }
 
 .attention-card__reason {
-  font-size: 11.5px;
-  color: var(--color-text-secondary);
-  line-height: 1.45;
+  min-width: 0;
 }
 
 .attention-card__meta {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
+  gap: 8px;
+  min-width: 96px;
   flex-shrink: 0;
-  padding-top: 1px;
 }
 
 .attention-card__time {
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: var(--fw-semibold);
+  font-size: 10px;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--attn-accent, var(--color-accent-teal));
   white-space: nowrap;
-  line-height: 1;
+  line-height: 1.2;
+  text-align: right;
+}
+
+[data-density='compact'] .attention-card__title {
+  font-size: var(--fs-sm);
+}
+
+[data-density='compact'] .attention-card__why,
+[data-density='compact'] .attention-card__reason {
+  font-size: var(--fs-xs);
+}
+
+@media (max-width: 640px) {
+  .attention-card {
+    grid-template-columns: 1fr;
+  }
+
+  .attention-card__meta {
+    align-items: flex-start;
+    min-width: 0;
+  }
 }

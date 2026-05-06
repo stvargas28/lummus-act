@@ -1,10 +1,56 @@
-import { useState } from 'react';
 import { useNeedsAttention } from '../../hooks/useNeedsAttention';
-import type { AttentionItem, Role } from '../../api/types';
+import type { AttentionItem, InterventionLevel, Role } from '../../api/types';
 import { AttentionCard } from './AttentionCard';
 import './NeedsAttentionPanel.css';
 
-const MAX_VISIBLE = 5;
+const PM_GROUPS: Array<{
+  level: InterventionLevel;
+  label: string;
+  helper: string;
+}> = [
+  {
+    level: 'PM_INTERVENTION',
+    label: 'PM intervention',
+    helper: 'Direct pressure or escalation may be needed.',
+  },
+  {
+    level: 'PM_AWARENESS',
+    label: 'PM awareness',
+    helper: 'Lead is working it; PM stays in the loop.',
+  },
+  {
+    level: 'LEAD_ACTION',
+    label: 'Lead action',
+    helper: 'Lead-owned follow-up, visible to PM.',
+  },
+  {
+    level: 'INFO',
+    label: 'Monitoring',
+    helper: 'Tracked for context.',
+  },
+];
+
+const LEAD_GROUPS: Array<{
+  severity: AttentionItem['severity'];
+  label: string;
+  helper: string;
+}> = [
+  {
+    severity: 'danger',
+    label: 'Overdue',
+    helper: 'Past an internal or client date. Work these first.',
+  },
+  {
+    severity: 'warning',
+    label: 'At risk',
+    helper: 'Still recoverable, but time or review activity is tight.',
+  },
+  {
+    severity: 'info',
+    label: 'Informational',
+    helper: 'Data quality or coordination items to clean up.',
+  },
+];
 
 interface NeedsAttentionPanelProps {
   projectId: string;
@@ -13,8 +59,6 @@ interface NeedsAttentionPanelProps {
 
 export function NeedsAttentionPanel({ projectId, role }: NeedsAttentionPanelProps) {
   const { data, loading, error } = useNeedsAttention(projectId);
-  const [expanded, setExpanded] = useState(false);
-  const [internalCollapsed, setInternalCollapsed] = useState(false);
 
   if (error) {
     return (
@@ -43,32 +87,24 @@ export function NeedsAttentionPanel({ projectId, role }: NeedsAttentionPanelProp
       <section className="attention-panel attention-panel--empty">
         <PanelHeader />
         <div className="attention-panel__empty">
-          <span className="attention-panel__empty-mark">✓</span>
+          <span className="attention-panel__empty-mark">OK</span>
           Nothing needs attention right now.
         </div>
       </section>
     );
   }
 
-  const visible = expanded ? items : items.slice(0, MAX_VISIBLE);
-
   return (
     <section className="attention-panel" aria-label="Needs attention">
       <PanelHeader total={total} />
 
-      {role === 'PM'
-        ? renderPmGrouped(visible, internalCollapsed, setInternalCollapsed, role)
-        : renderFlat(visible, role)}
+      <div className="attention-panel__scroll" tabIndex={0}>
+        {role === 'PM' ? renderPmGrouped(items, role) : renderLeadGrouped(items, role)}
+      </div>
 
-      {total > MAX_VISIBLE && (
-        <button
-          type="button"
-          className="attention-panel__expand"
-          onClick={() => setExpanded((v) => !v)}
-        >
-          {expanded ? 'Show fewer' : `Show all ${total} flagged items →`}
-        </button>
-      )}
+      <div className="attention-panel__footer">
+        Auto-triaged items stay here until the deliverable status changes.
+      </div>
     </section>
   );
 }
@@ -77,73 +113,69 @@ function PanelHeader({ total }: { total?: number } = {}) {
   return (
     <header className="attention-panel__header">
       <h2 className="attention-panel__title">
-        Needs attention
-        <span className="attention-panel__auto-tag">auto-triaged</span>
+        <span className="attention-panel__mark" aria-hidden="true">!</span>
+        Needs Attention
       </h2>
       <div className="attention-panel__sub">
-        {total !== undefined && <span className="attention-panel__count">{total} flagged</span>}
+        <span className="attention-panel__auto-tag">auto-triaged</span>
+        {total !== undefined && <span className="attention-panel__count">{total} items</span>}
       </div>
     </header>
   );
 }
 
-function renderFlat(items: AttentionItem[], role: Role) {
-  return (
-    <ul className="attention-panel__list">
-      {items.map((item) => (
-        <li key={item.deliverable_id + item.reason_kind}>
-          <AttentionCard item={item} role={role} />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function renderPmGrouped(
-  items: AttentionItem[],
-  internalCollapsed: boolean,
-  setInternalCollapsed: (v: boolean) => void,
-  role: Role,
-) {
-  const clientRisk = items.filter((i) => i.category === 'CLIENT_RISK');
-  const internal = items.filter((i) => i.category === 'INTERNAL');
-
+function renderPmGrouped(items: AttentionItem[], role: Role) {
   return (
     <>
-      {clientRisk.length > 0 && (
-        <>
-          <div className="attention-panel__group-label">Client risk</div>
-          <ul className="attention-panel__list">
-            {clientRisk.map((item) => (
-              <li key={item.deliverable_id + item.reason_kind}>
-                <AttentionCard item={item} role={role} />
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {internal.length > 0 && (
-        <>
-          <button
-            type="button"
-            className="attention-panel__group-label attention-panel__group-label--toggle"
-            onClick={() => setInternalCollapsed(!internalCollapsed)}
-            aria-expanded={!internalCollapsed}
-          >
-            <span>{internalCollapsed ? '▸' : '▾'}</span>
-            Internal ({internal.length})
-          </button>
-          {!internalCollapsed && (
+      {PM_GROUPS.map((group) => {
+        const groupItems = items.filter((item) => item.intervention_level === group.level);
+        if (groupItems.length === 0) return null;
+
+        return (
+          <section key={group.level} className="attention-panel__group" aria-label={group.label}>
+            <div className={`attention-panel__group-label attention-panel__group-label--${group.level.toLowerCase().replace('_', '-')}`}>
+              <span>{group.label}</span>
+              <span className="attention-panel__group-count">{groupItems.length}</span>
+            </div>
+            <div className="attention-panel__group-helper">{group.helper}</div>
             <ul className="attention-panel__list">
-              {internal.map((item) => (
+              {groupItems.map((item) => (
                 <li key={item.deliverable_id + item.reason_kind}>
                   <AttentionCard item={item} role={role} />
                 </li>
               ))}
             </ul>
-          )}
-        </>
-      )}
+          </section>
+        );
+      })}
+    </>
+  );
+}
+
+function renderLeadGrouped(items: AttentionItem[], role: Role) {
+  return (
+    <>
+      {LEAD_GROUPS.map((group) => {
+        const groupItems = items.filter((item) => item.severity === group.severity);
+        if (groupItems.length === 0) return null;
+
+        return (
+          <section key={group.severity} className="attention-panel__group" aria-label={group.label}>
+            <div className={`attention-panel__group-label attention-panel__group-label--${group.severity}`}>
+              <span>{group.label}</span>
+              <span className="attention-panel__group-count">{groupItems.length}</span>
+            </div>
+            <div className="attention-panel__group-helper">{group.helper}</div>
+            <ul className="attention-panel__list">
+              {groupItems.map((item) => (
+                <li key={item.deliverable_id + item.reason_kind}>
+                  <AttentionCard item={item} role={role} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
     </>
   );
 }

@@ -46,6 +46,8 @@
   --color-warn-amber-soft: rgba(224, 138, 0, 0.10);
   --color-warning: #e08a00;
   --color-warning-soft: rgba(224, 138, 0, 0.10);
+  --color-success: var(--color-accent-green);
+  --color-success-soft: var(--color-accent-green-soft);
 
   /* Row / hover */
   --color-row-hover: #f6fafb;
@@ -108,6 +110,8 @@
   --color-warn-amber-soft: rgba(224, 138, 0, 0.14);
   --color-warning: #e0a040;
   --color-warning-soft: rgba(224, 160, 64, 0.14);
+  --color-success: var(--color-accent-green);
+  --color-success-soft: var(--color-accent-green-soft);
 
   --color-row-hover: #133e50;
   --color-row-hover-strong: #1a4a5d;

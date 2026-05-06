@@ -36,6 +36,7 @@
   background-color: var(--color-bg-subtle);
   color: var(--color-text-muted);
   cursor: default;
+  border-color: var(--color-border);
 }
 
 .nudge-btn--sent {
