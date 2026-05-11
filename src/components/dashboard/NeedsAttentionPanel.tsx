@@ -55,9 +55,10 @@ const LEAD_GROUPS: Array<{
 interface NeedsAttentionPanelProps {
   projectId: string;
   role: Role;
+  projectOnHold?: boolean;
 }
 
-export function NeedsAttentionPanel({ projectId, role }: NeedsAttentionPanelProps) {
+export function NeedsAttentionPanel({ projectId, role, projectOnHold = false }: NeedsAttentionPanelProps) {
   const { data, loading, error } = useNeedsAttention(projectId);
 
   if (error) {
@@ -78,6 +79,18 @@ export function NeedsAttentionPanel({ projectId, role }: NeedsAttentionPanelProp
         <div className="attention-panel__skeleton" />
         <div className="attention-panel__skeleton" />
         <div className="attention-panel__skeleton" />
+      </section>
+    );
+  }
+
+  if (projectOnHold) {
+    return (
+      <section className="attention-panel attention-panel--empty attention-panel--hold">
+        <PanelHeader />
+        <div className="attention-panel__empty">
+          <span className="attention-panel__empty-mark">Hold</span>
+          Notifications are paused for this project.
+        </div>
       </section>
     );
   }

@@ -64,6 +64,9 @@ export interface Project {
   workspace_id: string;
   lead_user_id: string;
   pm_user_id: string;
+  hold_active: boolean;
+  hold_set_at: string | null;
+  hold_set_by: string | null;
 }
 
 export interface ReviewRecipient {
@@ -105,6 +108,12 @@ export interface Deliverable {
   fusion_revision: string | null;
   match_status: 'matched' | 'unmatched' | 'needs_review';
   needs_lead_review: boolean;
+  is_3d_model: boolean;
+  hold_active: boolean;
+  hold_set_at: string | null;
+  hold_set_by: string | null;
+  completeness_phase_proxy: number;
+  review_cycle_count: number;
   review: DeliverableReview | null;
   days_remaining_internal: number | null;
   days_remaining_client: number | null;

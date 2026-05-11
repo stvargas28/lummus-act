@@ -31,4 +31,6 @@ export async function nudge(_id: string, _recipientId: string): Promise<{ ok: tr
 export async function updateLeadNote(_id: string, _note: string | null): Promise<Deliverable> { throw new Error(NOT_WIRED); }
 export async function updateEngineerProgress(_id: string, _pct: number | null): Promise<Deliverable> { throw new Error(NOT_WIRED); }
 export async function updateDeliverableOwner(_id: string, _ownerUserId: string | null): Promise<Deliverable> { throw new Error(NOT_WIRED); }
+export async function updateProjectHold(_id: string, _active: boolean, _userId: string): Promise<Project> { throw new Error(NOT_WIRED); }
+export async function updateDeliverableHold(_id: string, _active: boolean, _userId: string): Promise<Deliverable> { throw new Error(NOT_WIRED); }
 export async function getAlertHistory(_projectId: string): Promise<AlertHistoryItem[]> { throw new Error(NOT_WIRED); }

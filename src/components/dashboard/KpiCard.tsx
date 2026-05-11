@@ -23,14 +23,15 @@ interface KpiCardProps {
   loading?: boolean;
   /** Optional descriptor under the value, e.g. "of total" or "≤ 5 days remaining". */
   descriptor?: string;
+  frozen?: boolean;
 }
 
-export function KpiCard({ card, loading, descriptor }: KpiCardProps) {
+export function KpiCard({ card, loading, descriptor, frozen = false }: KpiCardProps) {
   const tone = deltaSemanticForDirection(card);
   const value = card.value;
   return (
     <article
-      className="kpi-card"
+      className={`kpi-card ${frozen ? 'kpi-card--frozen' : ''}`}
       style={{ '--kpi-accent': `var(${card.color_token})` } as React.CSSProperties}
       aria-busy={loading || undefined}
     >
@@ -44,7 +45,7 @@ export function KpiCard({ card, loading, descriptor }: KpiCardProps) {
       </div>
 
       <div className="kpi-card__foot">
-        <span className="kpi-card__descriptor">{descriptor ?? defaultDescriptor(card)}</span>
+        <span className="kpi-card__descriptor">{frozen ? 'paused by project hold' : descriptor ?? defaultDescriptor(card)}</span>
         {!loading && card.delta_count !== null && !card.key.startsWith('total') && (
           <span className={`kpi-card__delta kpi-card__delta--${tone}`}>
             <span className="kpi-card__delta-arrow" aria-hidden="true">{ARROW[card.delta_direction]}</span>

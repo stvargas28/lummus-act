@@ -48,6 +48,20 @@
   box-shadow: var(--shadow-card-hover);
 }
 
+.kpi-card--frozen {
+  --kpi-accent: var(--color-border-strong) !important;
+}
+
+.kpi-card--frozen .kpi-card__value,
+.kpi-card--frozen .kpi-card__label,
+.kpi-card--frozen .kpi-card__descriptor {
+  color: var(--color-text-secondary);
+}
+
+.kpi-card--frozen .kpi-card__delta {
+  display: none;
+}
+
 .kpi-card__head {
   display: inline-flex;
   align-items: center;

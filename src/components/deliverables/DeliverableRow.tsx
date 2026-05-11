@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { updateDeliverableOwner } from '../../api';
+import { updateDeliverableHold, updateDeliverableOwner } from '../../api';
 import type { Deliverable, ProjectMember, Role } from '../../api/types';
+import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
-import { LateChip, StatusChip } from './StatusChip';
+import { ConfirmDialog } from '../shared/ConfirmDialog';
+import { HoldChip, LateChip, StatusChip } from './StatusChip';
 import { ProgressCell } from './ProgressCell';
 import { LeadNoteButton } from './LeadNoteButton';
 
@@ -48,9 +50,10 @@ export function DeliverableRow({
   const showActionMenu = role === 'LEAD';
   const daysRemaining = activeDaysRemaining(row, daysBasis);
   const isIssued = row.act_phase === 'ISSUED';
+  const effectiveOverdue = row.overdue_flag && !row.hold_active;
 
   return (
-    <tr className={`dt__row ${row.overdue_flag ? 'dt__row--overdue' : ''}`}>
+    <tr className={`dt__row ${effectiveOverdue ? 'dt__row--overdue' : ''} ${row.hold_active ? 'dt__row--hold' : ''}`}>
       <td className="dt__td dt__td--ref">
         <a
           className="dt__ref mono"
@@ -78,14 +81,14 @@ export function DeliverableRow({
       </td>
       <td
         className={`dt__td dt__td--date mono ${dueEmphasis === 'internal' ? 'dt__td--emphasis' : ''} ${
-          !isIssued && row.days_remaining_internal !== null && row.days_remaining_internal < 0 ? 'dt__td--past' : ''
+          !row.hold_active && !isIssued && row.days_remaining_internal !== null && row.days_remaining_internal < 0 ? 'dt__td--past' : ''
         }`}
       >
         {formatDate(row.internal_due)}
       </td>
       <td
         className={`dt__td dt__td--date mono ${dueEmphasis === 'client' ? 'dt__td--emphasis' : ''} ${
-          !isIssued && row.days_remaining_client !== null && row.days_remaining_client < 0 ? 'dt__td--past' : ''
+          !row.hold_active && !isIssued && row.days_remaining_client !== null && row.days_remaining_client < 0 ? 'dt__td--past' : ''
         }`}
       >
         {formatDate(row.client_due)}
@@ -93,7 +96,7 @@ export function DeliverableRow({
       <td className="dt__td dt__td--status">
         <div className="dt__chips">
           <StatusChip phase={row.act_phase} />
-          {row.overdue_flag && <LateChip />}
+          {row.hold_active ? <HoldChip /> : effectiveOverdue && <LateChip />}
         </div>
       </td>
       <td className="dt__td dt__td--progress">
@@ -105,7 +108,7 @@ export function DeliverableRow({
       </td>
       <td
         className={`dt__td dt__td--days mono ${
-          daysRemaining !== null && daysRemaining < 0 ? 'dt__td--past' : ''
+        !row.hold_active && daysRemaining !== null && daysRemaining < 0 ? 'dt__td--past' : ''
         }`}
       >
         {formatDays(daysRemaining)}
@@ -128,6 +131,7 @@ export function DeliverableRow({
             deliverable={row}
             assignableMembers={assignableMembers}
             onOwnerSaved={setRow}
+            onHoldSaved={setRow}
           />
         )}
       </td>
@@ -148,16 +152,20 @@ function DeliverableActionMenu({
   deliverable,
   assignableMembers,
   onOwnerSaved,
+  onHoldSaved,
 }: {
   deliverable: Deliverable;
   assignableMembers: ProjectMember[];
   onOwnerSaved: (next: Deliverable) => void;
+  onHoldSaved: (next: Deliverable) => void;
 }) {
   const { push } = useToast();
+  const { persona } = useAuth();
   const btnRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draftOwner, setDraftOwner] = useState(deliverable.owner_user_id ?? '');
+  const [pendingHoldActive, setPendingHoldActive] = useState<boolean | null>(null);
   const [pos, setPos] = useState({ top: 0, right: 0 });
 
   const openMenu = () => {
@@ -194,6 +202,33 @@ function DeliverableActionMenu({
     } catch {
       onOwnerSaved(previous);
       push('Could not update owner.', 'danger');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleHold = async () => {
+    if (!persona || pendingHoldActive === null) return;
+    const nextActive = pendingHoldActive;
+
+    const previous = deliverable;
+    onHoldSaved({
+      ...deliverable,
+      hold_active: nextActive,
+      hold_set_at: nextActive ? new Date().toISOString() : null,
+      hold_set_by: nextActive ? persona.user_id : null,
+    });
+    setSaving(true);
+
+    try {
+      const next = await updateDeliverableHold(deliverable.id, nextActive, persona.user_id);
+      onHoldSaved(next);
+      setPendingHoldActive(null);
+      push(nextActive ? 'Deliverable hold enabled.' : 'Deliverable alerts resumed.', 'success');
+      close();
+    } catch {
+      onHoldSaved(previous);
+      push(nextActive ? 'Could not hold deliverable.' : 'Could not resume deliverable alerts.', 'danger');
     } finally {
       setSaving(false);
     }
@@ -240,6 +275,16 @@ function DeliverableActionMenu({
                   ))}
                 </select>
               </label>
+              <div className="dt-menu-popover__section">
+                <button
+                  type="button"
+                  className={`dt-menu-popover__hold ${deliverable.hold_active ? 'dt-menu-popover__hold--resume' : ''}`}
+                  onClick={() => setPendingHoldActive(!deliverable.hold_active)}
+                  disabled={saving}
+                >
+                  {deliverable.hold_active ? 'Resume deliverable' : 'Hold deliverable'}
+                </button>
+              </div>
               <div className="dt-menu-popover__actions">
                 <button type="button" className="dt-menu-popover__btn dt-menu-popover__btn--cancel" onClick={close}>
                   Cancel
@@ -257,6 +302,19 @@ function DeliverableActionMenu({
           </div>,
           document.body,
         )}
+      <ConfirmDialog
+        open={pendingHoldActive !== null}
+        title={pendingHoldActive ? 'Hold this deliverable?' : 'Resume deliverable alerts?'}
+        body={
+          pendingHoldActive
+            ? `Alerts for ${deliverable.document_reference} will pause. Other deliverables are unaffected.`
+            : `ACT will evaluate ${deliverable.document_reference} against its current due dates.`
+        }
+        confirmLabel={pendingHoldActive ? 'Hold deliverable' : 'Resume alerts'}
+        busy={saving}
+        onCancel={() => setPendingHoldActive(null)}
+        onConfirm={toggleHold}
+      />
     </>
   );
 }

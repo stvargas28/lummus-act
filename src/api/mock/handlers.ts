@@ -24,6 +24,14 @@ export async function updateDeliverableOwner(deliverableId: string, ownerUserId:
   return seed.updateDeliverableOwner(deliverableId, ownerUserId);
 }
 
+export async function updateProjectHold(projectId: string, active: boolean, userId: string): Promise<Project> {
+  return seed.updateProjectHold(projectId, active, userId);
+}
+
+export async function updateDeliverableHold(deliverableId: string, active: boolean, userId: string): Promise<Deliverable> {
+  return seed.updateDeliverableHold(deliverableId, active, userId);
+}
+
 export async function listProjects(): Promise<Project[]> {
   return seed.listProjects();
 }

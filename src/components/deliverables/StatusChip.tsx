@@ -23,3 +23,7 @@ export function StatusChip({ phase }: { phase: ActPhase }) {
 export function LateChip() {
   return <span className="chip chip--late">LATE</span>;
 }
+
+export function HoldChip() {
+  return <span className="chip chip--hold">On hold</span>;
+}

@@ -5,9 +5,10 @@ import './KpiCardRow.css';
 interface KpiCardRowProps {
   projectId: string;
   role: 'LEAD' | 'PM';
+  frozen?: boolean;
 }
 
-export function KpiCardRow({ projectId, role }: KpiCardRowProps) {
+export function KpiCardRow({ projectId, role, frozen = false }: KpiCardRowProps) {
   const { data, loading, error } = useKpiSummary(projectId, role);
 
   if (error) {
@@ -28,7 +29,7 @@ export function KpiCardRow({ projectId, role }: KpiCardRowProps) {
   return (
     <section className="kpi-row" aria-label="Project key metrics">
       {slots.map((card) => (
-        <KpiCard key={card.key} loading={loading} card={card} />
+        <KpiCard key={card.key} loading={loading} card={card} frozen={frozen} />
       ))}
     </section>
   );

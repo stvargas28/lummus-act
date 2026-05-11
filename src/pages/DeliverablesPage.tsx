@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useActiveRole } from '../hooks/useActiveRole';
 import { useDeliverables } from '../hooks/useDeliverables';
 import { useProject } from '../hooks/useProject';
 import { useProjects } from '../hooks/useProjects';
 import { useToast } from '../hooks/useToast';
 import { DeliverablesTable } from '../components/deliverables/DeliverablesTable';
+import { ProjectHoldBanner, ProjectHoldButton } from '../components/shared/ProjectHoldControls';
 import { ProjectSetupNotice } from '../components/shared/ProjectSetupNotice';
+import type { Project } from '../api/types';
 import './DeliverablesPage.css';
 
 export function DeliverablesPage() {
@@ -16,13 +18,20 @@ export function DeliverablesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddDrawingModal, setShowAddDrawingModal] = useState(false);
   const [showSplitModal, setShowSplitModal] = useState(false);
+  const [projectHold, setProjectHold] = useState<Project | null>(null);
+
+  useEffect(() => {
+    setProjectHold(null);
+  }, [projectId]);
 
   if (!projectId || !role) {
     return <div>Loading…</div>;
   }
 
   const isLead = role === 'LEAD';
-  const projectName = projects.data?.find((p) => p.id === projectId)?.name ?? projectId;
+  const loadedProject = projects.data?.find((p) => p.id === projectId) ?? null;
+  const project = projectHold?.id === projectId ? projectHold : loadedProject;
+  const projectName = project?.name ?? projectId;
   const isUnconfigured = !deliverables.loading && (deliverables.data?.length ?? 0) === 0;
 
   if (isUnconfigured) {
@@ -44,17 +53,25 @@ export function DeliverablesPage() {
   return (
     <div className="deliverables-page">
       <div className="deliverables-page__header">
-        <h1>Deliverables</h1>
-        {isLead && (
-          <button
-            type="button"
-            className="deliverables-page__add-btn"
-            onClick={() => setShowAddModal(true)}
-          >
-            + Add Deliverable
-          </button>
-        )}
+        <div>
+          <h1>Deliverables</h1>
+          <div className="deliverables-page__subtitle">{projectName}</div>
+        </div>
+        <div className="deliverables-page__actions">
+          <ProjectHoldButton projectId={projectId} project={project} role={role} onProjectChange={setProjectHold} />
+          {isLead && (
+            <button
+              type="button"
+              className="deliverables-page__add-btn"
+              onClick={() => setShowAddModal(true)}
+            >
+              + Add Deliverable
+            </button>
+          )}
+        </div>
       </div>
+
+      <ProjectHoldBanner projectId={projectId} project={project} role={role} onProjectChange={setProjectHold} />
 
       <DeliverablesTable
         projectId={projectId}

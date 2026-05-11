@@ -182,6 +182,9 @@ const PROJECTS: Record<string, Project> = {
     workspace_id: '361325',
     lead_user_id: 'u-lead-bra',
     pm_user_id: 'u-pm-bra',
+    hold_active: false,
+    hold_set_at: null,
+    hold_set_by: null,
   },
   '363780': {
     id: '363780',
@@ -189,6 +192,9 @@ const PROJECTS: Record<string, Project> = {
     workspace_id: '363780',
     lead_user_id: 'u-lead-shi',
     pm_user_id: 'u-pm-shi',
+    hold_active: false,
+    hold_set_at: null,
+    hold_set_by: null,
   },
   TEST: {
     id: 'TEST',
@@ -196,6 +202,9 @@ const PROJECTS: Record<string, Project> = {
     workspace_id: 'TEST',
     lead_user_id: 'u-lead-bra',
     pm_user_id: 'u-pm-bra',
+    hold_active: false,
+    hold_set_at: null,
+    hold_set_by: null,
   },
 };
 
@@ -226,6 +235,15 @@ const PHASE_DESCRIPTIONS: Record<ActPhase, { label: string; description: string;
 
 const ALL_PHASES: ActPhase[] = ['NOT_STARTED', 'DRAFT', 'UNDER_REVIEW', 'REVISING', 'READY_FOR_ISSUE', 'ISSUED'];
 
+const COMPLETENESS_BY_PHASE: Record<ActPhase, number> = {
+  NOT_STARTED: 0,
+  DRAFT: 10,
+  UNDER_REVIEW: 50,
+  REVISING: 60,
+  READY_FOR_ISSUE: 75,
+  ISSUED: 85,
+};
+
 function synthesizePhase(raw: RawMatch): ActPhase {
   if (raw.match_status === 'unmatched') return 'NOT_STARTED';
   if (raw.fusion_pm_status === 'Issued') return 'ISSUED';
@@ -236,6 +254,10 @@ function synthesizePhase(raw: RawMatch): ActPhase {
   if (r < 0.78) return 'REVISING';
   if (r < 0.92) return 'READY_FOR_ISSUE';
   return 'ISSUED';
+}
+
+function detect3dModel(title: string): boolean {
+  return /\b3d\b/i.test(title);
 }
 
 // ---------- review synthesis ----------
@@ -448,6 +470,7 @@ function buildProject(projectId: string): ProjectData {
     const phase = synthesizePhase(m);
     const owner = resolveOwner(projectId, m.owner_source);
     const review = synthesizeReview(projectId, m, phase, bottleneckRefs);
+    const is3dModel = detect3dModel(m.title);
 
     const internalDue = shiftSourceIso(m.internal_due);
     const clientDue = shiftSourceIso(m.client_due);
@@ -456,7 +479,7 @@ function buildProject(projectId: string): ProjectData {
 
     const isPastInternal = internalDays !== null && internalDays < 0;
     const isPastClient = clientDays !== null && clientDays < 0;
-    const overdue = phase !== 'ISSUED' && (isPastInternal || isPastClient);
+    const overdue = phase !== 'ISSUED' && !is3dModel && (isPastInternal || isPastClient);
 
     return {
       id: `${projectId}-${m.document_reference}`,
@@ -476,6 +499,12 @@ function buildProject(projectId: string): ProjectData {
       fusion_revision: m.fusion_revision,
       match_status: m.match_status,
       needs_lead_review: m.needs_lead_review,
+      is_3d_model: is3dModel,
+      hold_active: false,
+      hold_set_at: null,
+      hold_set_by: null,
+      completeness_phase_proxy: COMPLETENESS_BY_PHASE[phase],
+      review_cycle_count: review ? 1 + (hash(m.document_reference + 'cycles') % 3) : 0,
       review,
       days_remaining_internal: internalDays,
       days_remaining_client: clientDays,
@@ -523,6 +552,31 @@ export function updateDeliverableOwner(deliverableId: string, ownerUserId: strin
     if (d.owner_user_id === null) d.engineer_progress_percent = null;
     else if (d.engineer_progress_percent === null) d.engineer_progress_percent = 0;
     return d;
+  }
+  throw new Error(`Deliverable ${deliverableId} not found`);
+}
+
+export function updateProjectHold(projectId: string, active: boolean, userId: string): Project {
+  const project = PROJECTS[projectId];
+  if (!project) throw new Error(`Unknown project ${projectId}`);
+
+  project.hold_active = active;
+  project.hold_set_at = active ? new Date().toISOString() : null;
+  project.hold_set_by = active ? userId : null;
+
+  if (_cache[projectId]) _cache[projectId].project = project;
+  return project;
+}
+
+export function updateDeliverableHold(deliverableId: string, active: boolean, userId: string): Deliverable {
+  for (const pid of Object.keys(_cache)) {
+    const d = _cache[pid].deliverables.find((x) => x.id === deliverableId);
+    if (d) {
+      d.hold_active = active;
+      d.hold_set_at = active ? new Date().toISOString() : null;
+      d.hold_set_by = active ? userId : null;
+      return d;
+    }
   }
   throw new Error(`Deliverable ${deliverableId} not found`);
 }
@@ -624,11 +678,13 @@ export function getPersona(id: string): Persona | null {
 
 export function getKpiSummary(projectId: string, role: 'LEAD' | 'PM'): KpiCardData[] {
   const dels = getDeliverables(projectId);
+  const project = getProject(projectId);
   const total = dels.length;
-  const nonIssued = dels.filter((d) => d.act_phase !== 'ISSUED');
+  const riskRows = project.hold_active ? [] : dels.filter((d) => !d.hold_active && !d.is_3d_model);
+  const nonIssued = riskRows.filter((d) => d.act_phase !== 'ISSUED');
 
   if (role === 'LEAD') {
-    const overdue = dels.filter(
+    const overdue = riskRows.filter(
       (d) => d.act_phase !== 'ISSUED' &&
         ((d.days_remaining_internal !== null && d.days_remaining_internal < 0) ||
          (d.days_remaining_client !== null && d.days_remaining_client < 0)),
@@ -647,7 +703,7 @@ export function getKpiSummary(projectId: string, role: 'LEAD' | 'PM'): KpiCardDa
   }
 
   // PM
-  const overdueClient = dels.filter(
+  const overdueClient = riskRows.filter(
     (d) => d.act_phase !== 'ISSUED' && d.days_remaining_client !== null && d.days_remaining_client < 0,
   ).length;
   const atRiskClient = nonIssued.filter((d) => {
@@ -705,10 +761,14 @@ export function getFunnel(projectId: string): FunnelPhase[] {
 // ---------- Needs Attention ----------
 
 export function getNeedsAttention(projectId: string): AttentionItem[] {
+  const project = getProject(projectId);
+  if (project.hold_active) return [];
+
   const dels = getDeliverables(projectId);
   const items: AttentionItem[] = [];
 
   for (const d of dels) {
+    if (d.hold_active || d.is_3d_model) continue;
     if (d.act_phase === 'ISSUED') continue;
 
     const clientLate = d.days_remaining_client !== null && d.days_remaining_client < 0;
