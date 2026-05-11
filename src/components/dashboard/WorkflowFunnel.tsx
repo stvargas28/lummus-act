@@ -93,21 +93,6 @@ export function WorkflowFunnel({ projectId, selectedPhase, onSelectPhase }: Work
         })}
       </ul>
 
-      {/* Legend */}
-      {!loading && phases.length > 0 && (
-        <ul className="funnel__legend">
-          {phases.map((p) => (
-            <li key={p.phase} className="funnel__legend-item">
-              <span
-                className="funnel__legend-swatch"
-                style={{ backgroundColor: `var(${p.color_token})` }}
-                aria-hidden="true"
-              />
-              <span className="funnel__legend-label">{p.label}</span>
-            </li>
-          ))}
-        </ul>
-      )}
     </section>
   );
 }
