@@ -42,6 +42,7 @@ export interface ProjectMember {
   initials: string;
   role: Role | 'OBSERVER';
   email: string;
+  teams_user_id?: string | null;
 }
 
 export interface ProjectMembership {
@@ -67,6 +68,10 @@ export interface Project {
   hold_active: boolean;
   hold_set_at: string | null;
   hold_set_by: string | null;
+  notification_settings?: {
+    daily_digest_enabled: boolean;
+    daily_digest_time_local: string;
+  };
 }
 
 export interface ReviewRecipient {
