@@ -2,26 +2,32 @@
 
 This folder holds the Databricks-side scaffold for ACT. The React app remains in `src/`; Databricks owns FusionLive ingestion, ACT transformations, alert computation, and dashboard/API serving tables.
 
-## Intended Workspace Layout
+## Current Direction
 
-Start in a sandbox schema:
-
-```sql
-USE CATALOG lum_databricks_dev_es1_ws;
-USE SCHEMA act_dev;
-```
-
-The setup SQL keeps medallion intent in table names so the model can later promote cleanly:
+AIG's preferred direction is to create a sandbox catalog for development, then promote into shared medallion layers:
 
 ```text
-act_dev.bronze_* -> bronze.act_*
-act_dev.silver_* -> silver.act_*
-act_dev.gold_*   -> gold.act_*
+sandbox_catalog.bronze        # reusable raw FusionLive / source captures
+sandbox_catalog.silver        # reusable cleaned FusionLive / normalized project data
+sandbox_catalog.gold_lummus_act # ACT-specific serving layer
 ```
+
+Long term, ACT should reuse the same production `bronze` and `silver` layers as other FusionLive work. The ACT-specific `gold` layer should contain dashboard, alert, Teams queue, and API-serving objects.
+
+```text
+bronze.fusionlive_*        # reusable across projects/products
+silver.fusionlive_*        # reusable across projects/products
+silver.act_*               # ACT normalized business model, reusable across ACT projects
+gold_lummus_act.*          # ACT app/API/Teams serving layer
+```
+
+`sql/ACT_Databricks_Medallion_v2.sql` reflects this direction.
+
+`sql/ACT_Databricks_Schema_v1.sql` is the earlier single-schema sandbox draft. Keep it as reference, but prefer v2 if AIG creates a sandbox catalog with medallion schemas.
 
 ## Notebook Mapping
 
-`sql/ACT_Databricks_Schema_v1.sql` is intended to become the first Databricks setup notebook:
+`sql/ACT_Databricks_Medallion_v2.sql` is intended to become the first Databricks setup notebook:
 
 ```text
 ACT_Setup_Schema
@@ -42,19 +48,20 @@ ACT_Alert_Engine
 
 ## Access Needed
 
-Ask a Databricks workspace owner to create:
+Ask a Databricks workspace owner to create or identify a sandbox catalog, then create/grant:
 
 ```text
-lum_databricks_dev_es1_ws.act_dev
+<sandbox_catalog>.bronze
+<sandbox_catalog>.silver
+<sandbox_catalog>.gold_lummus_act
 ```
 
 Then grant:
 
 ```text
-USE SCHEMA
-CREATE TABLE
-MODIFY
-SELECT
+USE CATALOG on <sandbox_catalog>
+USE SCHEMA on bronze, silver, gold_lummus_act
+CREATE TABLE, MODIFY, SELECT on those schemas
 ```
 
-The schema should be run only after `act_dev` exists.
+Run the setup SQL only after the catalog/schemas exist, unless you have permission to create schemas yourself.
